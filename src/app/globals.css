@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
+/*
+  The surface and the greys. Near black, never pure. Text lives in a controlled
+  set of greys so the eye reads trip, then day, then activity, then price. The
+  brightest ink is reserved for numbers, which are the loudest thing on screen.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0b0d;
+
+  /* raised surfaces, each a small step of light, so depth reads as tone before
+     it reads as shadow */
+  --surface-1: #101216;
+  --surface-2: #15171c;
+  --surface-3: #1b1e24;
+
+  /* hairlines and edge light, for elevation without heavy borders */
+  --hairline: rgba(255, 255, 255, 0.055);
+  --hairline-strong: rgba(255, 255, 255, 0.1);
+  --edge-light: rgba(255, 255, 255, 0.045);
+
+  /* ink, brightest to faintest */
+  --ink-0: #edeef1;
+  --ink-1: #b8bbc2;
+  --ink-2: #83878f;
+  --ink-3: #5a5e67;
+  --ink-4: #3c4048;
+
+  /* colour carries one job, status */
+  --accent: #3fb950; /* a fare below its own tenth percentile, a held day */
+  --accent-soft: rgba(63, 185, 80, 0.14);
+  --warn: #f85149; /* a plan over the traveller's own maximum */
+  --warn-soft: rgba(248, 81, 73, 0.14);
+
+  /* motion. weighted deceleration, noticeable but never slow */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --d1: 200ms;
+  --d2: 320ms;
+  --d3: 460ms;
+
+  /* restrained elevation */
+  --elev-float: 0 1px 0 var(--edge-light) inset,
+    0 24px 48px -28px rgba(0, 0, 0, 0.75), 0 2px 8px -4px rgba(0, 0, 0, 0.6);
+  --elev-raise: 0 1px 0 var(--edge-light) inset,
+    0 16px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--ink-1);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--bg);
+  color: var(--ink-1);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Every figure aligns in true columns and never shifts width as it rolls. */
+.num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.ink-0 { color: var(--ink-0); }
+.ink-1 { color: var(--ink-1); }
+.ink-2 { color: var(--ink-2); }
+.ink-3 { color: var(--ink-3); }
+.ink-4 { color: var(--ink-4); }
+
+/* Surfaces imply physical layers by tone and a single top edge of light. */
+.surface-1 { background: var(--surface-1); }
+.surface-2 { background: var(--surface-2); }
+.surface-3 { background: var(--surface-3); }
+.hairline-t { box-shadow: 0 -1px 0 0 var(--hairline) inset; }
+.elev-raise { box-shadow: var(--elev-raise); }
+.elev-float { box-shadow: var(--elev-float); }
+
+/* A label set once, the quiet voice of the instrument. */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/*
+  The planner runs on a warm, light surface. The same tokens the components
+  already use are redefined here, so the class re-skins the planner without the
+  components knowing. The tracker keeps the dark default above. Photographs, map
+  tiles, and category tiles carry pictorial colour; the interface chrome stays
+  warm grey, and status colour is still reserved for over budget and held.
+*/
+.theme-planner {
+  --bg: #cdd9ec;
+  --surface-1: #e8eef8;
+  --surface-2: #ffffff;
+  --surface-3: #ffffff;
+
+  --hairline: rgba(15, 23, 42, 0.08);
+  --hairline-strong: rgba(15, 23, 42, 0.14);
+  --edge-light: rgba(255, 255, 255, 0.9);
+
+  --ink-0: #0f172a;
+  --ink-1: #334155;
+  --ink-2: #64748b;
+  --ink-3: #94a3b8;
+  --ink-4: #cbd5e1;
+
+  --accent: #16a34a;
+  --accent-soft: rgba(22, 163, 74, 0.14);
+  --warn: #e11d48;
+  --warn-soft: rgba(225, 29, 72, 0.14);
+
+  --elev-raise: 0 1px 0 var(--edge-light) inset,
+    0 10px 26px -16px rgba(15, 23, 42, 0.2);
+  --elev-float: 0 1px 0 var(--edge-light) inset,
+    0 26px 50px -24px rgba(15, 23, 42, 0.26),
+    0 4px 12px -6px rgba(15, 23, 42, 0.14);
+
+  background: var(--bg);
+  color: var(--ink-1);
+}
+
+/*
+  Reduced motion collapses every transition and animation to an instant state.
+  The counting numbers already land at once in script; this covers the rest.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
