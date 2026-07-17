@@ -142,3 +142,6 @@ This is how the product keeps getting better without the build ever drifting: id
 
 ## MORNING CHECKLIST
 (Owner only actions the agent prepared but did not perform.)
+
+- Push the branch: `git push -u origin overnight/jul-17` hangs waiting for GitHub sign-in (HTTPS remote, credential manager has no stored credential). Run it once interactively, or type `! git push -u origin overnight/jul-17` in the Claude Code session; every commit is local until then.
+- Rotate the RapidAPI key (CLAUDE.md section 12: the key used during de-risk runs was exposed in chat). Regenerate in RapidAPI, update .env.local and Vercel.
