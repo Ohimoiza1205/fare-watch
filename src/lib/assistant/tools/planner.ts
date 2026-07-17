@@ -1,13 +1,19 @@
 import type { TripPlan } from "@/lib/planner/repo";
 import { findAlternatives } from "@/lib/planner/alternatives";
 import { computeTripBudget } from "@/lib/planner/budget";
+import { buildSwapProposal, type SwapProposal } from "../proposal";
 import type { AssistantTool } from "../provider";
 
-// Read-only planner tools over one loaded trip. Applying a swap through the
-// assistant is a later phase; nothing here mutates. Executors return compact
-// JSON with only the fields an answer needs.
+// Planner tools over one loaded trip. Everything here reads; propose_swap
+// stages a proposal but writes nothing, and the confirm endpoint is the only
+// path that mutates. Executors return compact JSON with only the fields an
+// answer needs. onProposal hands each staged proposal to the route so it can
+// ride the response to the client alongside the reply text.
 
-export function plannerTools(plan: TripPlan): AssistantTool[] {
+export function plannerTools(
+  plan: TripPlan,
+  opts?: { onProposal?: (p: SwapProposal) => void }
+): AssistantTool[] {
   const { trip, days } = plan;
 
   const pricedItems = () =>
@@ -18,6 +24,42 @@ export function plannerTools(plan: TripPlan): AssistantTool[] {
         isEstimated: it.isEstimated,
       }))
     );
+
+  // One lookup shared by find_alternatives and propose_swap, so both draw
+  // candidates from the same live source with the same bounds.
+  async function lookupOptions(input: Record<string, unknown>) {
+    const day = days.find((d) => d.dayIndex === Number(input.dayIndex));
+    const item = day?.items[Number(input.position)];
+    if (!day || !item) {
+      return { error: "no item at that dayIndex and position" } as const;
+    }
+
+    const lat = item.lat ?? trip.dest_lat;
+    const lon = item.lon ?? trip.dest_lon;
+    if (lat == null || lon == null) {
+      return { error: "no coordinates for that item" } as const;
+    }
+
+    let options = await findAlternatives({
+      lat,
+      lon,
+      category: item.category,
+      travellers: trip.travellers,
+      currency: trip.currency,
+      excludeVenue: item.venue,
+    });
+
+    const min = Number(input.minPrice);
+    const max = Number(input.maxPrice);
+    if (Number.isFinite(min)) {
+      options = options.filter((o) => o.price != null && o.price >= min);
+    }
+    if (Number.isFinite(max)) {
+      options = options.filter((o) => o.price != null && o.price <= max);
+    }
+
+    return { day, item, options } as const;
+  }
 
   return [
     {
@@ -68,33 +110,9 @@ export function plannerTools(plan: TripPlan): AssistantTool[] {
         additionalProperties: false,
       },
       execute: async (input) => {
-        const day = days.find((d) => d.dayIndex === Number(input.dayIndex));
-        const item = day?.items[Number(input.position)];
-        if (!day || !item) return { error: "no item at that dayIndex and position" };
-
-        const lat = item.lat ?? trip.dest_lat;
-        const lon = item.lon ?? trip.dest_lon;
-        if (lat == null || lon == null) {
-          return { error: "no coordinates for that item" };
-        }
-
-        let options = await findAlternatives({
-          lat,
-          lon,
-          category: item.category,
-          travellers: trip.travellers,
-          currency: trip.currency,
-          excludeVenue: item.venue,
-        });
-
-        const min = Number(input.minPrice);
-        const max = Number(input.maxPrice);
-        if (Number.isFinite(min)) {
-          options = options.filter((o) => o.price != null && o.price >= min);
-        }
-        if (Number.isFinite(max)) {
-          options = options.filter((o) => o.price != null && o.price <= max);
-        }
+        const found = await lookupOptions(input);
+        if ("error" in found) return found;
+        const { item, options } = found;
 
         return {
           currentName: item.venue ?? item.title,
@@ -115,6 +133,70 @@ export function plannerTools(plan: TripPlan): AssistantTool[] {
         return r?.currentName
           ? `looked up alternatives for ${r.currentName}`
           : `looked up alternatives for day ${input.dayIndex}`;
+      },
+    },
+    {
+      name: "propose_swap",
+      description:
+        "Stage a formal swap proposal for one item when the traveller asks to change or replace it. Fetches 2 or 3 real alternatives and returns them as a proposal the traveller confirms or dismisses in the interface. This changes nothing by itself; never claim a swap happened from this result. Identify the item by dayIndex and position from get_trip. Optional minPrice and maxPrice bound the party price.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          dayIndex: { type: "integer" },
+          position: { type: "integer" },
+          minPrice: { type: "number" },
+          maxPrice: { type: "number" },
+        },
+        required: ["dayIndex", "position"],
+        additionalProperties: false,
+      },
+      execute: async (input) => {
+        const found = await lookupOptions(input);
+        if ("error" in found) return found;
+        const { day, item, options } = found;
+
+        if (options.length === 0) {
+          return {
+            replaces: item.venue ?? item.title,
+            day: day.dayIndex + 1,
+            options: [],
+            note: "No real alternatives were found nearby. Nothing was proposed.",
+          };
+        }
+
+        const proposal = buildSwapProposal({
+          item,
+          dayIndex: day.dayIndex,
+          travellers: trip.travellers,
+          options,
+        });
+        opts?.onProposal?.(proposal);
+
+        // The model sees the same figures the card renders, so its prose stays
+        // inside the grounding whitelist. The token stays out of its view.
+        return {
+          proposalId: proposal.proposalId,
+          replaces: proposal.before.venue,
+          currentPrice: proposal.before.price,
+          day: day.dayIndex + 1,
+          options: proposal.options.map((o) => ({
+            option: o.id,
+            venue: o.venue,
+            fact: o.fact,
+            price: o.price,
+            priceMax: o.priceMax,
+            currency: o.currency,
+            isEstimated: o.isEstimated,
+          })),
+          note: "Proposal staged. The traveller confirms or dismisses it in the interface. Do not say the swap happened.",
+        };
+      },
+      summarize: (_input, result) => {
+        const r = result as { replaces?: string; options?: unknown[] } | null;
+        if (!r?.replaces) return "looked for swap options";
+        return r.options?.length
+          ? `proposed a swap for ${r.replaces}`
+          : `found no alternatives for ${r.replaces}`;
       },
     },
     {

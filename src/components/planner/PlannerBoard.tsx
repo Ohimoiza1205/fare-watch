@@ -325,7 +325,7 @@ export function PlannerBoard({
       </div>
 
       <div className="mt-6">
-        <AssistantPanel tripId={tripId} />
+        <AssistantPanel tripId={tripId} onItemReplaced={replaceItem} />
       </div>
 
       <div className="mt-6">
