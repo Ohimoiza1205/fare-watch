@@ -72,10 +72,17 @@ export function AssistantPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(option),
       });
-      const data = (await res.json()) as { item?: ComposedItem };
+      const data = (await res.json()) as { item?: ComposedItem; error?: string };
       if (data.item) {
         onReplace(data.item);
         setSuggestion(null);
+      } else {
+        // e.g. the item is locked; state the server's reason rather than
+        // failing silently
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", content: data.error ?? "The swap did not apply." },
+        ]);
       }
     } finally {
       setApplying(null);

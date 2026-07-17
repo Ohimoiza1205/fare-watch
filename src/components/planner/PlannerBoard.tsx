@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComposedDay, ComposedItem } from "@/lib/planner/day";
 import { computeTripBudget, type Priced } from "@/lib/planner/budget";
 import { formatDayDate } from "@/lib/planner/format";
@@ -37,6 +37,48 @@ export function PlannerBoard({
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
+
+  // Which day sections are closed, keyed by day id so the state survives a
+  // re-generation of the composed view. Restored after mount, and the
+  // disclosure motion is enabled only after the restore has painted, so
+  // nothing animates on load.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [disclosureReady, setDisclosureReady] = useState(false);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const storageKey = `planner.collapsed.${tripId}`;
+
+  useEffect(() => {
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      try {
+        const raw = window.localStorage.getItem(storageKey);
+        if (raw) setCollapsed(JSON.parse(raw) as Record<string, boolean>);
+      } catch {
+        // unreadable state simply falls back to all expanded
+      }
+      raf2 = requestAnimationFrame(() => setDisclosureReady(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [storageKey]);
+
+  function dayKey(d: ComposedDay): string {
+    return d.id ?? d.date;
+  }
+
+  function toggleDay(key: string) {
+    setCollapsed((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        // storage full or blocked; the session state still works
+      }
+      return next;
+    });
+  }
 
   const priced: Priced[] = days.flatMap((d) =>
     d.items.map((it) => ({
@@ -108,6 +150,39 @@ export function PlannerBoard({
     );
   }
 
+  async function removeItem(itemId: number) {
+    const res = await fetch(`/api/items/${itemId}`, { method: "DELETE" });
+    if (!res.ok) return;
+    setDays((prev) =>
+      prev.map((d) => ({
+        ...d,
+        items: d.items.filter((it) => it.id !== itemId),
+      }))
+    );
+  }
+
+  function addItem(dayId: string, item: ComposedItem) {
+    setDays((prev) =>
+      prev.map((d) =>
+        d.id === dayId ? { ...d, items: [...d.items, item] } : d
+      )
+    );
+  }
+
+  // Selecting from the strip aims the rail at that day and opens its section.
+  // The scroll is user-driven, so smooth motion is allowed, and it still
+  // honours reduced motion.
+  function selectDay(index: number) {
+    setSelected(index);
+    const target = days[index];
+    if (target && collapsed[dayKey(target)]) toggleDay(dayKey(target));
+    const el = sectionRefs.current[index];
+    if (el) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    }
+  }
+
   return (
     <div>
       <StatCards
@@ -125,11 +200,31 @@ export function PlannerBoard({
       />
 
       <div className="mt-4">
-        <DayStrip days={days} selected={selected} onSelect={setSelected} />
+        <DayStrip days={days} selected={selected} onSelect={selectDay} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <ItineraryDay day={day} travellers={travellers} onReplace={replaceItem} />
+        <div className="space-y-8">
+          {days.map((d, i) => (
+            <div
+              key={dayKey(d)}
+              ref={(el) => {
+                sectionRefs.current[i] = el;
+              }}
+            >
+              <ItineraryDay
+                day={d}
+                travellers={travellers}
+                expanded={!collapsed[dayKey(d)]}
+                animate={disclosureReady}
+                onToggle={() => toggleDay(dayKey(d))}
+                onReplace={replaceItem}
+                onRemove={removeItem}
+                onAdd={addItem}
+              />
+            </div>
+          ))}
+        </div>
 
         <aside className="space-y-4">
           <BudgetDonut items={dayBreakdown} currency={currency} />

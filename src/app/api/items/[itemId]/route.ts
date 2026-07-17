@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/db/client";
-import { updateItem } from "@/lib/planner/repo";
+import { updateItem, deleteItem, getItem, composeItem } from "@/lib/planner/repo";
 import { PlannerError } from "@/lib/planner/intake";
 import type { AlternativeOption } from "@/lib/planner/alternatives";
-import type { ComposedItem } from "@/lib/planner/day";
 
-// Apply a swap. The chosen option came from the alternatives lookup, so it is
-// already real and priced. We only ever write those fields, so a swap cannot
-// introduce an invented venue or price.
+// Item mutations. A body carrying a boolean locked toggles the hold flag and
+// nothing else. Otherwise the body is a swap: a chosen option from the
+// alternatives lookup, already real and priced, and only those fields are ever
+// written, so a swap cannot introduce an invented venue or price. A locked
+// item refuses a swap.
 function num(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
@@ -15,21 +16,43 @@ function str(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
 
+function parseId(itemId: string): number | null {
+  const id = Number(itemId);
+  return Number.isInteger(id) ? id : null;
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ itemId: string }> }
 ) {
   const { itemId } = await params;
-  const id = Number(itemId);
-  if (!Number.isInteger(id)) {
+  const id = parseId(itemId);
+  if (id == null) {
     return NextResponse.json({ error: "Bad item id." }, { status: 400 });
   }
 
-  let body: Partial<AlternativeOption>;
+  let body: Partial<AlternativeOption> & { locked?: unknown };
   try {
-    body = (await req.json()) as Partial<AlternativeOption>;
+    body = (await req.json()) as Partial<AlternativeOption> & { locked?: unknown };
   } catch {
     return NextResponse.json({ error: "Send a JSON body." }, { status: 400 });
+  }
+
+  const db = createServiceClient();
+
+  if (typeof body.locked === "boolean") {
+    try {
+      const row = await updateItem(db, id, { locked: body.locked });
+      if (!row) {
+        return NextResponse.json({ error: "Item not found." }, { status: 404 });
+      }
+      return NextResponse.json({ item: composeItem(row) });
+    } catch (e) {
+      if (e instanceof PlannerError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Lock failed." }, { status: 500 });
+    }
   }
 
   const venue = str(body.venue);
@@ -37,8 +60,18 @@ export async function PATCH(
     return NextResponse.json({ error: "An option is required." }, { status: 400 });
   }
 
-  const db = createServiceClient();
   try {
+    const existing = await getItem(db, id);
+    if (!existing) {
+      return NextResponse.json({ error: "Item not found." }, { status: 404 });
+    }
+    if (existing.locked) {
+      return NextResponse.json(
+        { error: "Locked. Unlock to swap." },
+        { status: 409 }
+      );
+    }
+
     const row = await updateItem(db, id, {
       category: str(body.category) ?? undefined,
       title: str(body.title) ?? venue,
@@ -59,28 +92,36 @@ export async function PATCH(
     if (!row) {
       return NextResponse.json({ error: "Item not found." }, { status: 404 });
     }
-
-    const item: ComposedItem = {
-      id: row.id,
-      category: row.category,
-      title: row.title,
-      venue: row.venue,
-      address: row.address,
-      lat: row.lat,
-      lon: row.lon,
-      price: row.price,
-      priceMax: row.price_max,
-      currency: row.currency,
-      isEstimated: row.is_estimated,
-      priceSource: row.price_source,
-      sourceUrl: row.source_url,
-      note: row.notes,
-    };
-    return NextResponse.json({ item });
+    return NextResponse.json({ item: composeItem(row) });
   } catch (e) {
     if (e instanceof PlannerError) {
       return NextResponse.json({ error: e.message }, { status: 400 });
     }
     return NextResponse.json({ error: "Swap failed." }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ itemId: string }> }
+) {
+  const { itemId } = await params;
+  const id = parseId(itemId);
+  if (id == null) {
+    return NextResponse.json({ error: "Bad item id." }, { status: 400 });
+  }
+
+  const db = createServiceClient();
+  try {
+    const removed = await deleteItem(db, id);
+    if (!removed) {
+      return NextResponse.json({ error: "Item not found." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof PlannerError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Remove failed." }, { status: 500 });
   }
 }

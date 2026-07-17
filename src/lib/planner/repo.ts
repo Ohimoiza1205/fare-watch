@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ResolvedIntake } from "./intake";
 import { PlannerError } from "./intake";
 import type { PlannedDay } from "./arrange";
-import type { WeatherSnapshot, TripRow, DayRow, ItemRow } from "./types";
+import type { WeatherSnapshot, TripRow, DayRow, ItemRow, ItemInsert } from "./types";
 import type { GeoResult } from "./geocode";
 import type { ComposedDay, ComposedItem } from "./day";
 import { rollup } from "./budget";
@@ -115,7 +115,9 @@ export async function insertDaysAndItems(
   }
 }
 
-function toComposedItem(row: ItemRow): ComposedItem {
+// The one row-to-interface mapping, shared with the API routes so an item
+// always crosses the wire in the same shape.
+export function composeItem(row: ItemRow): ComposedItem {
   return {
     id: row.id,
     category: row.category,
@@ -131,6 +133,7 @@ function toComposedItem(row: ItemRow): ComposedItem {
     priceSource: row.price_source,
     sourceUrl: row.source_url,
     note: row.notes,
+    locked: row.locked,
   };
 }
 
@@ -174,8 +177,9 @@ export async function loadTripPlan(
 
   const destLabel = t.dest_label ?? t.destination;
   const days: ComposedDay[] = dayRows.map((d) => {
-    const items = (itemsByDay.get(d.id) ?? []).map(toComposedItem);
+    const items = (itemsByDay.get(d.id) ?? []).map(composeItem);
     return {
+      id: d.id,
       dayIndex: d.day_index,
       date: d.day_date,
       rhythm: d.rhythm,
@@ -240,7 +244,77 @@ export type ItemUpdate = {
   price_source?: string | null;
   source_url?: string | null;
   notes?: string | null;
+  locked?: boolean;
 };
+
+export async function getItem(db: DB, itemId: number): Promise<ItemRow | null> {
+  const { data } = await db
+    .from("item")
+    .select("*")
+    .eq("id", itemId)
+    .maybeSingle();
+  return (data as ItemRow) ?? null;
+}
+
+export async function deleteItem(db: DB, itemId: number): Promise<boolean> {
+  const { error, count } = await db
+    .from("item")
+    .delete({ count: "exact" })
+    .eq("id", itemId);
+  if (error) {
+    throw new PlannerError(`Could not remove the item. ${error.message}`);
+  }
+  return (count ?? 0) > 0;
+}
+
+// One day with its trip, so an add knows where to look and for whom.
+export async function loadDayContext(
+  db: DB,
+  dayId: string
+): Promise<{ day: DayRow; trip: TripRow } | null> {
+  const { data: day } = await db
+    .from("day")
+    .select("*")
+    .eq("id", dayId)
+    .maybeSingle();
+  if (!day) return null;
+  const dayRow = day as DayRow;
+
+  const { data: trip } = await db
+    .from("trip")
+    .select("*")
+    .eq("id", dayRow.trip_id)
+    .maybeSingle();
+  if (!trip) return null;
+
+  return { day: dayRow, trip: trip as TripRow };
+}
+
+// Insert one item at the end of a day's sequence.
+export async function appendItem(
+  db: DB,
+  dayId: string,
+  fields: Omit<ItemInsert, "day_id" | "position">
+): Promise<ItemRow> {
+  const { data: last } = await db
+    .from("item")
+    .select("position")
+    .eq("day_id", dayId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const position = ((last as { position: number } | null)?.position ?? -1) + 1;
+
+  const { data, error } = await db
+    .from("item")
+    .insert({ ...fields, day_id: dayId, position })
+    .select()
+    .single();
+  if (error || !data) {
+    throw new PlannerError(`Could not add the item. ${error?.message ?? ""}`.trim());
+  }
+  return data as ItemRow;
+}
 
 export async function updateItem(
   db: DB,

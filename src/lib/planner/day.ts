@@ -23,9 +23,13 @@ export type ComposedItem = {
   priceSource: string | null;
   sourceUrl: string | null;
   note: string | null;
+  locked: boolean;
 };
 
 export type ComposedDay = {
+  // Null until the day is persisted; a saved day carries its row id so edits
+  // can address it.
+  id: string | null;
   dayIndex: number;
   date: string;
   rhythm: Rhythm;
@@ -52,6 +56,7 @@ function toComposedItem(a: PricedActivity): ComposedItem {
     priceSource: a.priceSource,
     sourceUrl: a.sourceUrl,
     note: a.note,
+    locked: false,
   };
 }
 
@@ -98,6 +103,7 @@ export async function buildOneRealDay(opts: BuildDayOpts): Promise<ComposedDay> 
 
   const items = activity ? [toComposedItem(activity)] : [];
   return {
+    id: null,
     dayIndex,
     date,
     rhythm,
