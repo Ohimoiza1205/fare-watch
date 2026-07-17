@@ -152,6 +152,8 @@ export function AssistantPanel({
         }}
       >
         <textarea
+          id="assistant-input"
+          aria-label="Ask about the plan"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {

@@ -29,8 +29,16 @@ export default async function TripPage({
     <main className="mx-auto w-full max-w-6xl px-6 py-6">
       <TripHeaderBar
         defaultTitle={`${days.length} days in ${short}`}
+        destination={destination}
         dates={dates}
+        startDate={trip.start_date}
+        endDate={trip.end_date}
         travellers={trip.travellers}
+        budget={
+          trip.budget_ceiling != null
+            ? formatMoney(trip.budget_ceiling, trip.currency)
+            : null
+        }
         brief={{
           destination,
           dates,
