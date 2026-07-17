@@ -90,6 +90,13 @@ Work top to bottom. Append new tasks at the bottom forever; never reorder or del
 - [ ] T9. Price history resilience: verify the stops filter fix path; sparklines read whatever history exists, empty safe; one paid poll maximum for verification, logged.
 - [ ] T10. View switcher, phase 1: Itinerary (existing) plus Calendar view (a month grid of the trip with day totals). Map and Timeline stubs route honestly to "not built yet" states, not dead tabs.
 - [ ] T11. Refinement pass: spacing rhythm, type hierarchy, category colour consistency across tags, pins, donut, rows; confirmed versus estimate clarity; no layout restructuring.
+- [ ] [proposed] P1. Sparkline hover scrub plus percentile position: hairline follows pointer, exact price and date print in the row's own number slot, and rows state "Nth lowest of M observations". Rationale: makes the stored history explorable and states position in history without forecast fakery.
+- [ ] [proposed] P2. Fare caveat flags: one-word grey tag on row and in alert text when the cheapest quote is virtual interline or self transfer (field already in schema). Rationale: a cheap number that hides a caveat is invented savings.
+- [ ] [proposed] P3. Honest staleness stamp: each row shows "as of Xh ago" in grey from observed_at; no skeletons anywhere. Rationale: last-known value plus age is the honest loading state for known layouts.
+- [ ] [proposed] P4. Opening-hours conflict line: store venue hours at add time, compare against the planned day, print a plain warning when closed. Rationale: highest honesty per line of code in the planner.
+- [ ] [proposed] P5. Keyboard list navigation: arrows or j/k to move, Enter to expand, slash to reach add watch. Rationale: a glance-and-act instrument should not require the mouse.
+- [ ] [proposed] P6. Plain-text printable itinerary export: one server-rendered route with addresses, times, confirmed prices. Rationale: a trip is used where connectivity is not.
+- [ ] [proposed] P7. Date-change re-flow: applying a new date range to a generated trip shifts or rebuilds days deliberately. Rationale: T3 ships the date picker affordance with apply disabled because silent desync is worse than no edit.
 - [ ] T12. Production readiness: clean prod build, vercel.json cron schedule, .env.example with every variable name, DEPLOY.md with the exact owner steps (Vercel connect, env paste, prod CRON_SECRET, deploy, domain purchase and DNS pointing), key rotation list.
 
 ## PART 6: DESIGN LEDGER (every accumulated decision, binding)
@@ -126,6 +133,8 @@ This is how the product keeps getting better without the build ever drifting: id
 (One line per task: done or BLOCKED with reason. Research sweeps add two lines each.)
 
 - T1 done: stray colours and durations moved to tokens (on-ink, on-accent, on-marker, map-route, shadow-marker, d-draw, d-roll, d-fade, motion.ts constants); category hsl derivation unified in categoryColor.ts; typecheck and build pass; sparkline fade easing now var(--ease), the one deliberate rendering change; lint had 10 pre-existing any errors in dispatch.ts and flightsSky.ts, cleared in a follow-up commit so the lint gate holds from here on.
+- Sweep 1 learned: terminal-grade tables enforce numbers-right with tabular figures and honest staleness beats skeletons; Going marks mistake fares with a may-not-be-honoured warning; no planner competitor does deterministic opening-hours checks.
+- Sweep 1 proposed: P1 sparkline scrub, P2 fare caveat flags, P3 staleness stamp, P4 opening-hours conflict, P5 keyboard nav, P6 printable export, plus P7 date-change re-flow from T3 scoping.
 - T2 done: all seven nav items route to real pages (Home summary at /, tracker moved to /watchlist, new /deals, /alerts, /profile, /settings), sidebar weather card fed from next upcoming trip via cached Open-Meteo call, listAlerts query added; typecheck, lint, build pass first cycle.
 
 ## MORNING CHECKLIST
