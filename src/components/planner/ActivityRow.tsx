@@ -16,19 +16,58 @@ import { VenueImage } from "./VenueImage";
 // A lock holds the item against swaps; the overflow menu carries swap and
 // remove, the only two mutations the item supports.
 
-function Node({ number, isFirst, isLast }: { number: number; isFirst: boolean; isLast: boolean }) {
+// The numbered node doubles as the map affordance: when the item carries
+// coordinates, clicking it selects the matching pin. Selected reads as filled
+// ink, still neutral; colour stays reserved for status.
+function Node({
+  number,
+  isFirst,
+  isLast,
+  selected = false,
+  onSelect,
+}: {
+  number: number;
+  isFirst: boolean;
+  isLast: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
+  const face = (
+    <span
+      className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem]"
+      style={
+        selected
+          ? { background: "var(--ink-1)", color: "var(--on-ink)" }
+          : {
+              background: "var(--surface-2)",
+              color: "var(--ink-2)",
+              boxShadow: "0 0 0 1px var(--hairline-strong)",
+            }
+      }
+    >
+      {number}
+    </span>
+  );
   return (
     <div className="relative flex h-full flex-col items-center">
       <span
         className="w-px flex-1"
         style={{ background: isFirst ? "transparent" : "var(--hairline-strong)" }}
       />
-      <span
-        className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem] ink-2"
-        style={{ background: "var(--surface-2)", boxShadow: "0 0 0 1px var(--hairline-strong)" }}
-      >
-        {number}
-      </span>
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-pressed={selected}
+          aria-label="Show on map"
+          title="Show on map"
+          className="shrink-0 rounded-full transition-transform duration-[var(--d1)] ease-[var(--ease)] hover:scale-110"
+        >
+          {face}
+        </button>
+      ) : (
+        face
+      )}
       <span
         className="w-px flex-1"
         style={{ background: isLast ? "transparent" : "var(--hairline-strong)" }}
@@ -110,6 +149,10 @@ export function ActivityRow({
   isLast,
   onReplace,
   onRemove,
+  mapSelected = false,
+  onShowOnMap,
+  highlighted = false,
+  onHighlightEnd,
 }: {
   item: ComposedItem;
   number: number;
@@ -119,6 +162,10 @@ export function ActivityRow({
   isLast: boolean;
   onReplace: (next: ComposedItem) => void;
   onRemove: () => Promise<void>;
+  mapSelected?: boolean;
+  onShowOnMap?: () => void;
+  highlighted?: boolean;
+  onHighlightEnd?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [alts, setAlts] = useState<AlternativeOption[] | null>(null);
@@ -233,12 +280,28 @@ export function ActivityRow({
     "opacity-0 ink-3 hover:text-[var(--ink-1)] group-hover/card:opacity-100 group-focus-within/card:opacity-100";
 
   return (
-    <div className="grid grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] gap-x-2">
+    <div
+      className="grid grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] gap-x-2"
+      data-item-id={item.id}
+    >
       <span className="num pt-3 text-right text-[0.6875rem] ink-3">{time}</span>
-      <Node number={number} isFirst={isFirst} isLast={isLast} />
+      <Node
+        number={number}
+        isFirst={isFirst}
+        isLast={isLast}
+        selected={mapSelected}
+        onSelect={onShowOnMap}
+      />
 
       <div className="pb-3">
-        <div className="group/card relative flex w-full gap-2 rounded-xl p-2.5 surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)]">
+        <div
+          className={`group/card relative flex w-full gap-2 rounded-xl p-2.5 surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)] ${
+            highlighted ? "planner-locate" : ""
+          }`}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "planner-locate") onHighlightEnd?.();
+          }}
+        >
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}

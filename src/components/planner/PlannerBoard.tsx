@@ -13,13 +13,18 @@ import { DayMap, type MapStop } from "./DayMap";
 import { AssistantPanel } from "./AssistantPanel";
 import { TripSummaryStrip } from "./TripSummaryStrip";
 import { categoryMarkerColor } from "@/lib/planner/categoryColor";
+import { categoryById } from "@/lib/planner/categories";
+import { scheduleTime } from "@/lib/planner/schedule";
+import { formatMoneyRange } from "@/lib/planner/format";
 import type { BreakdownItem } from "@/lib/planner/breakdown";
 
-// The planner dashboard. Stats on top, the day strip as a selector, the selected
-// day's schedule in the centre, and the right rail with the donut and the street
-// map. Selecting a day moves the centre, the map, the donut, and the weather
-// together. The days live in state so a swap updates every figure live, and the
-// numbers roll to their new value.
+// The planner dashboard. Stats on top, the day strip as a selector, the days
+// stacked in the centre, and the right rail with the budget ring and the street
+// map. Selecting a day moves the centre, the map, and the weather together.
+// One selected stop drives both the list and the map: a pin click opens its
+// card on the map, a row's number selects its pin, and the card's one action
+// leads back to the row. The days live in state so a swap updates every figure
+// live, and the numbers roll to their new value.
 export function PlannerBoard({
   tripId,
   days: initialDays,
@@ -37,6 +42,12 @@ export function PlannerBoard({
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
+
+  // One selected stop shared by the map and the rows; a hovered breakdown row
+  // for the ring; a row briefly ringed after the map card's show in plan.
+  const [selectedStopId, setSelectedStopId] = useState<number | null>(null);
+  const [hoverCategory, setHoverCategory] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
 
   // Which day sections are closed, keyed by day id so the state survives a
   // re-generation of the composed view. Restored after mount, and the
@@ -128,18 +139,37 @@ export function PlannerBoard({
   }));
 
   const stops: MapStop[] = day.items
-    .map((it, i) =>
-      it.lat != null && it.lon != null
-        ? {
-            name: it.venue ?? it.title,
-            lat: it.lat,
-            lon: it.lon,
-            number: i + 1,
-            color: categoryMarkerColor(it.category),
-          }
-        : null
-    )
+    .map((it, i) => {
+      if (it.lat == null || it.lon == null) return null;
+      const lo = it.price ?? it.priceMax;
+      const hi = it.priceMax ?? it.price;
+      return {
+        id: it.id,
+        name: it.venue ?? it.title,
+        lat: it.lat,
+        lon: it.lon,
+        number: i + 1,
+        color: categoryMarkerColor(it.category),
+        category: it.category,
+        categoryLabel: categoryById(it.category)?.label ?? it.category,
+        time: scheduleTime(i, day.items.length),
+        priceText: lo != null ? formatMoneyRange(lo, hi as number, it.currency) : null,
+        priceContext:
+          lo != null
+            ? travellers > 1
+              ? `for ${travellers} people`
+              : "per person"
+            : null,
+        isEstimated: it.isEstimated,
+      };
+    })
     .filter((s): s is MapStop => s != null);
+
+  // The map remounts when the stops themselves change, so a swap or an add
+  // moves the pins and the card as immediately as it moves the figures.
+  const mapKey = `${day.date}|${stops
+    .map((s) => `${s.id}:${s.name}:${s.lat}:${s.lon}:${s.priceText ?? ""}`)
+    .join("|")}`;
 
   function replaceItem(next: ComposedItem) {
     setDays((prev) =>
@@ -153,6 +183,7 @@ export function PlannerBoard({
   async function removeItem(itemId: number) {
     const res = await fetch(`/api/items/${itemId}`, { method: "DELETE" });
     if (!res.ok) return;
+    setSelectedStopId((s) => (s === itemId ? null : s));
     setDays((prev) =>
       prev.map((d) => ({
         ...d,
@@ -174,6 +205,7 @@ export function PlannerBoard({
   // honours reduced motion.
   function selectDay(index: number) {
     setSelected(index);
+    setSelectedStopId(null);
     const target = days[index];
     if (target && collapsed[dayKey(target)]) toggleDay(dayKey(target));
     const el = sectionRefs.current[index];
@@ -181,6 +213,36 @@ export function PlannerBoard({
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
     }
+  }
+
+  // A row's number selects its pin. The rail is aimed at that row's day first,
+  // so the map showing the pin is always the map on screen. Clicking the same
+  // number again clears the selection.
+  function selectStopFromRow(dayIndex: number, itemId: number) {
+    setSelected(dayIndex);
+    setSelectedStopId((cur) => (cur === itemId ? null : itemId));
+  }
+
+  // The map card's one action: open the day section if it is closed, scroll to
+  // the row, and ring it once. The ring clears itself when its animation ends.
+  function showInPlan(itemId: number) {
+    const di = days.findIndex((d) => d.items.some((it) => it.id === itemId));
+    if (di < 0) return;
+    const key = dayKey(days[di]);
+    if (collapsed[key]) toggleDay(key);
+    setHighlightId(itemId);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-item-id="${itemId}"]`);
+        const reduce = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        el?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "center",
+        });
+      })
+    );
   }
 
   return (
@@ -221,24 +283,42 @@ export function PlannerBoard({
                 onReplace={replaceItem}
                 onRemove={removeItem}
                 onAdd={addItem}
+                selectedStopId={i === selected ? selectedStopId : null}
+                onSelectStop={(id) => selectStopFromRow(i, id)}
+                highlightId={highlightId}
+                onHighlightEnd={() => setHighlightId(null)}
               />
             </div>
           ))}
         </div>
 
         <aside className="space-y-4">
-          <BudgetDonut items={dayBreakdown} currency={currency} />
+          <BudgetDonut
+            items={tripBreakdown}
+            currency={currency}
+            planned={budget.average}
+            ceiling={budget.limit}
+            overLimit={budget.overLimit}
+            emphasis={hoverCategory}
+          />
 
           <BudgetBreakdown
             dayItems={dayBreakdown}
             tripItems={tripBreakdown}
             currency={currency}
+            onHoverCategory={setHoverCategory}
           />
 
           <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
             <h3 className="eyebrow">Street map, day {day.dayIndex + 1}</h3>
             <div className="mt-3">
-              <DayMap key={day.date} stops={stops} />
+              <DayMap
+                key={mapKey}
+                stops={stops}
+                selectedId={selectedStopId}
+                onSelect={setSelectedStopId}
+                onShowInPlan={showInPlan}
+              />
             </div>
           </div>
         </aside>
@@ -255,6 +335,7 @@ export function PlannerBoard({
           estimatedTotal={budget.average}
           dailyAverage={dailyAverage}
           currency={currency}
+          hasEstimate={budget.hasEstimate}
         />
       </div>
     </div>

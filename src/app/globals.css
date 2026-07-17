@@ -152,6 +152,61 @@ body {
 }
 
 /*
+  The day map's pins and the selected stop's card. The card reuses Leaflet's
+  popup shell so the caret and the edge panning come free, re-skinned with the
+  same tokens as every other raised surface. The selected pin grows slightly;
+  the card's fade rides the standard duration tokens. The reduced motion rule
+  below collapses both, along with Leaflet's own CSS-driven pan and zoom
+  transitions, because it applies to every element.
+*/
+.planner-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  color: var(--on-marker);
+  font: 600 11px/1 ui-monospace, monospace;
+  box-shadow: var(--shadow-marker);
+  transition: transform var(--d1) var(--ease);
+}
+.planner-pin.is-selected {
+  transform: scale(1.2);
+}
+
+.planner-popup .leaflet-popup-content-wrapper {
+  background: var(--surface-3);
+  color: var(--ink-1);
+  border-radius: 0.625rem;
+  box-shadow: var(--elev-float);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+.planner-popup .leaflet-popup-tip {
+  background: var(--surface-3);
+}
+.planner-popup .leaflet-popup-content {
+  margin: 0.625rem 0.75rem;
+  line-height: 1.45;
+}
+.leaflet-fade-anim .leaflet-popup {
+  transition: opacity var(--d1) var(--ease);
+}
+
+/* A brief neutral ring on the row that show in plan just landed on. */
+@keyframes planner-locate {
+  from {
+    box-shadow: 0 0 0 2px var(--ink-2), var(--elev-raise);
+  }
+  to {
+    box-shadow: 0 0 0 2px transparent, var(--elev-raise);
+  }
+}
+.planner-locate {
+  animation: planner-locate var(--d-roll) var(--ease) both;
+}
+
+/*
   Reduced motion collapses every transition and animation to an instant state.
   The counting numbers already land at once in script; this covers the rest.
 */

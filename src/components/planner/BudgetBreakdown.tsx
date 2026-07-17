@@ -5,10 +5,11 @@ import { PriceRoll } from "@/components/PriceRoll";
 import { categoryBreakdown, type BreakdownItem } from "@/lib/planner/breakdown";
 import { categoryById } from "@/lib/planner/categories";
 
-// The per category rows below the donut, in the same colours, amounts, and
-// percents. The figures come from the real items, so a confirmed price and an
-// estimate both count at their own value. The control at the bottom switches
-// between the selected day and the whole trip.
+// The per category rows below the ring, in the same colours, amounts, and
+// percents; they are the ring's legend, so the trip view leads. The figures
+// come from the real items, so a confirmed price and an estimate both count at
+// their own value. The control at the bottom switches to the selected day.
+// Hovering a row tells the ring which arc to leave bright.
 
 function label(category: string): string {
   return categoryById(category)?.label ?? category;
@@ -18,12 +19,14 @@ export function BudgetBreakdown({
   dayItems,
   tripItems,
   currency,
+  onHoverCategory,
 }: {
   dayItems: BreakdownItem[];
   tripItems: BreakdownItem[];
   currency: string;
+  onHoverCategory?: (category: string | null) => void;
 }) {
-  const [full, setFull] = useState(false);
+  const [full, setFull] = useState(true);
   const source = full ? tripItems : dayItems;
   const { rows } = useMemo(() => categoryBreakdown(source), [source]);
 
@@ -36,7 +39,12 @@ export function BudgetBreakdown({
       ) : (
         <ul className="mt-3 space-y-2">
           {rows.map((row) => (
-            <li key={row.category} className="flex items-center gap-2.5 text-xs">
+            <li
+              key={row.category}
+              className="flex items-center gap-2.5 text-xs"
+              onMouseEnter={() => onHoverCategory?.(row.category)}
+              onMouseLeave={() => onHoverCategory?.(null)}
+            >
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-sm"
                 style={{ background: row.color }}

@@ -184,6 +184,10 @@ export function ItineraryDay({
   onReplace,
   onRemove,
   onAdd,
+  selectedStopId = null,
+  onSelectStop,
+  highlightId = null,
+  onHighlightEnd,
 }: {
   day: ComposedDay;
   travellers: number;
@@ -193,6 +197,10 @@ export function ItineraryDay({
   onReplace: (next: ComposedItem) => void;
   onRemove: (itemId: number) => Promise<void>;
   onAdd: (dayId: string, item: ComposedItem) => void;
+  selectedStopId?: number | null;
+  onSelectStop?: (itemId: number) => void;
+  highlightId?: number | null;
+  onHighlightEnd?: () => void;
 }) {
   const total = rollup(
     day.items.map((it) => ({
@@ -282,6 +290,14 @@ export function ItineraryDay({
                   isLast={i === count - 1}
                   onReplace={onReplace}
                   onRemove={() => onRemove(item.id)}
+                  mapSelected={selectedStopId === item.id}
+                  onShowOnMap={
+                    onSelectStop && item.lat != null && item.lon != null
+                      ? () => onSelectStop(item.id)
+                      : undefined
+                  }
+                  highlighted={highlightId === item.id}
+                  onHighlightEnd={onHighlightEnd}
                 />
               ))
             )}
