@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { WeatherSnapshot } from "@/lib/planner/types";
 
 // The left rail. The wordmark sits at the top, the destinations run down the
 // middle with the active one in the accent, and a quiet user card is pinned at
@@ -37,25 +38,58 @@ const ICON: Record<string, Glyph> = {
   settings: (p) => <G {...p}><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" /></G>,
 };
 
-type Item = { id: string; label: string; href: string | null };
+type Item = { id: string; label: string; href: string };
 
 const ITEMS: Item[] = [
-  { id: "home", label: "Home", href: null },
+  { id: "home", label: "Home", href: "/" },
   { id: "trips", label: "Trips", href: "/plan" },
-  { id: "deals", label: "Deals", href: null },
-  { id: "watchlist", label: "Watchlist", href: "/" },
-  { id: "alerts", label: "Alerts", href: null },
-  { id: "profile", label: "Profile", href: null },
-  { id: "settings", label: "Settings", href: null },
+  { id: "deals", label: "Deals", href: "/deals" },
+  { id: "watchlist", label: "Watchlist", href: "/watchlist" },
+  { id: "alerts", label: "Alerts", href: "/alerts" },
+  { id: "profile", label: "Profile", href: "/profile" },
+  { id: "settings", label: "Settings", href: "/settings" },
 ];
 
 function isActive(item: Item, pathname: string): boolean {
-  if (item.href === "/plan") return pathname.startsWith("/plan");
   if (item.href === "/") return pathname === "/";
-  return false;
+  return pathname.startsWith(item.href);
 }
 
-export function Sidebar() {
+export type SidebarWeather = {
+  destLabel: string;
+  snapshot: WeatherSnapshot;
+};
+
+// Weather for the next trip's destination, kept quiet: figures, unit, and the
+// condition in plain words. An estimated snapshot dims and takes a tilde, the
+// same treatment estimated prices get in the planner.
+function WeatherCard({ weather }: { weather: SidebarWeather }) {
+  const { tempMax, tempMin, unit, summary, estimated } = weather.snapshot;
+  return (
+    <div className="mx-3 px-3 py-2">
+      <span className="block truncate text-xs ink-2">{weather.destLabel}</span>
+      <span
+        className={`mt-1 flex items-baseline gap-2 text-xs ${estimated ? "ink-3" : "ink-2"}`}
+      >
+        {estimated && (
+          <span aria-hidden="true" className="ink-3">
+            ~
+          </span>
+        )}
+        <span className={`num ${estimated ? "ink-2" : "ink-1"}`}>
+          {tempMax != null ? Math.round(tempMax) : "--"}
+        </span>
+        <span className="num ink-3">
+          {tempMin != null ? Math.round(tempMin) : "--"}
+        </span>
+        <span className="ink-4">{unit}</span>
+        <span className="truncate lowercase">{summary}</span>
+      </span>
+    </div>
+  );
+}
+
+export function Sidebar({ weather }: { weather?: SidebarWeather | null }) {
   const pathname = usePathname();
 
   return (
@@ -77,9 +111,7 @@ export function Sidebar() {
                 className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-[var(--d1)] ${
                   active
                     ? ""
-                    : item.href
-                      ? "ink-2 hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
-                      : "ink-3"
+                    : "ink-2 hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
                 }`}
                 style={
                   active
@@ -100,18 +132,16 @@ export function Sidebar() {
 
             return (
               <li key={item.id}>
-                {item.href ? (
-                  <Link href={item.href} aria-current={active ? "page" : undefined}>
-                    {inner}
-                  </Link>
-                ) : (
-                  <span aria-disabled="true">{inner}</span>
-                )}
+                <Link href={item.href} aria-current={active ? "page" : undefined}>
+                  {inner}
+                </Link>
               </li>
             );
           })}
         </ul>
       </nav>
+
+      {weather && <WeatherCard weather={weather} />}
 
       <div className="m-3 flex items-center gap-3 rounded-lg p-3 surface-1">
         <span

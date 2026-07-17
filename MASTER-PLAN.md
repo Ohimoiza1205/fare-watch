@@ -80,7 +80,7 @@ Do only what the task says. Do not redesign working screens, rename things for t
 Work top to bottom. Append new tasks at the bottom forever; never reorder or delete completed ones.
 
 - [x] T1. Unify tokens: audit both views for hardcoded colours, spacing, or durations; move all to the shared token source; verify tracker and planner render identically to before.
-- [ ] T2. Sidebar completion: every nav item routes to a real page (Home summary, Trips, Deals from alert history, Watchlist tracker, Alerts history, Profile, Settings). No dead links. Add the contextual weather card and user card per the references.
+- [x] T2. Sidebar completion: every nav item routes to a real page (Home summary, Trips, Deals from alert history, Watchlist tracker, Alerts history, Profile, Settings). No dead links. Add the contextual weather card and user card per the references.
 - [ ] T3. Trip context header: destination thumbnail, dates chip with picker affordance, travellers chip, budget chip, share trip, primary action. Editable trip title stays.
 - [ ] T4. Stat cards to reference parity: budget with progress bar and percent of ceiling, daily average with per day sparkline, remaining amount, trip style chip, weather high low condition. Tinted icons, tabular figures, rolling numbers.
 - [ ] T5. Itinerary rows to reference parity: address line under venue, per person or for N people context on prices, overflow control, save or lock control on each row, add activity affordance per day, collapsed day rows showing date plus total.
@@ -126,6 +126,7 @@ This is how the product keeps getting better without the build ever drifting: id
 (One line per task: done or BLOCKED with reason. Research sweeps add two lines each.)
 
 - T1 done: stray colours and durations moved to tokens (on-ink, on-accent, on-marker, map-route, shadow-marker, d-draw, d-roll, d-fade, motion.ts constants); category hsl derivation unified in categoryColor.ts; typecheck and build pass; sparkline fade easing now var(--ease), the one deliberate rendering change; lint had 10 pre-existing any errors in dispatch.ts and flightsSky.ts, cleared in a follow-up commit so the lint gate holds from here on.
+- T2 done: all seven nav items route to real pages (Home summary at /, tracker moved to /watchlist, new /deals, /alerts, /profile, /settings), sidebar weather card fed from next upcoming trip via cached Open-Meteo call, listAlerts query added; typecheck, lint, build pass first cycle.
 
 ## MORNING CHECKLIST
 (Owner only actions the agent prepared but did not perform.)

@@ -126,6 +126,80 @@ function summarise(
   };
 }
 
+export type AlertLogRow = {
+  id: number;
+  watchId: string;
+  reason: string;
+  price: number;
+  channels: string[];
+  sentAt: string;
+  origin: string;
+  destination: string;
+  currency: string;
+  deepLink: string | null;
+  carriers: string[] | null;
+  stops: number | null;
+};
+
+type EmbeddedWatch = { origin: string; destination: string; currency: string };
+type EmbeddedObservation = {
+  deep_link: string | null;
+  carriers: string[] | null;
+  stops: number | null;
+};
+
+// Supabase returns an embedded relation as an object for a to-one join, but the
+// generic client types it loosely, so normalise either shape to one record.
+function one<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
+// The alert log joined to its watch for the route and to the observation that
+// fired it for the booking link. Newest first.
+export async function listAlerts(limit = 200): Promise<AlertLogRow[]> {
+  const db = createServiceClient();
+  const { data } = await db
+    .from("alert")
+    .select(
+      "id, watch_id, reason, price, channels, sent_at, " +
+        "watch:watch_id (origin, destination, currency), " +
+        "observation:observation_id (deep_link, carriers, stops)"
+    )
+    .order("sent_at", { ascending: false })
+    .limit(limit);
+
+  type Raw = {
+    id: number;
+    watch_id: string;
+    reason: string;
+    price: number;
+    channels: string[] | null;
+    sent_at: string;
+    watch: EmbeddedWatch | EmbeddedWatch[] | null;
+    observation: EmbeddedObservation | EmbeddedObservation[] | null;
+  };
+
+  return ((data ?? []) as unknown as Raw[]).map((r) => {
+    const w = one(r.watch);
+    const o = one(r.observation);
+    return {
+      id: r.id,
+      watchId: r.watch_id,
+      reason: r.reason,
+      price: r.price,
+      channels: r.channels ?? [],
+      sentAt: r.sent_at,
+      origin: w?.origin ?? "",
+      destination: w?.destination ?? "",
+      currency: w?.currency ?? "",
+      deepLink: o?.deep_link ?? null,
+      carriers: o?.carriers ?? null,
+      stops: o?.stops ?? null,
+    };
+  });
+}
+
 export async function getDashboard(): Promise<Dashboard> {
   const db = createServiceClient();
 
