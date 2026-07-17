@@ -26,12 +26,14 @@ export function PlannerBoard({
   travellers,
   currency,
   budgetCeiling,
+  taste,
 }: {
   tripId: string;
   days: ComposedDay[];
   travellers: number;
   currency: string;
   budgetCeiling: number | null;
+  taste: string[];
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
@@ -46,6 +48,26 @@ export function PlannerBoard({
   const budget = computeTripBudget(priced, { currency, limit: budgetCeiling });
   const dailyAverage = days.length ? budget.average / days.length : 0;
   const activityCount = days.reduce((sum, d) => sum + d.items.length, 0);
+
+  // Per day sums, recomputed from items so a swap moves the bars too. The
+  // estimate share keeps the trip total honest about how much is marked.
+  const dayTotals = days.map((d) =>
+    d.items.reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0)
+  );
+  const estimatedShare = days
+    .flatMap((d) => d.items)
+    .filter((it) => it.isEstimated)
+    .reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0);
+
+  // Today's bar and weather when the trip is underway; otherwise the heaviest
+  // day carries the accent and the first day carries the forecast.
+  const today = new Date().toLocaleDateString("en-CA");
+  const todayIndex = days.findIndex((d) => d.date === today);
+  const underway = todayIndex >= 0;
+  const accentDayIndex = underway
+    ? todayIndex
+    : dayTotals.indexOf(Math.max(...dayTotals, 0));
+  const weatherDay = underway ? days[todayIndex] : days[0];
 
   const tripBreakdown: BreakdownItem[] = days.flatMap((d) =>
     d.items.map((it) => ({
@@ -89,13 +111,17 @@ export function PlannerBoard({
   return (
     <div>
       <StatCards
-        average={budget.average}
-        ceiling={budget.ceiling}
-        dailyAverage={dailyAverage}
-        currency={currency}
+        planned={budget.average}
+        ceiling={budget.limit}
+        estimatedShare={estimatedShare}
         overLimit={budget.overLimit}
-        weather={day.weather}
-        weatherDate={formatDayDate(day.date)}
+        dailyAverage={dailyAverage}
+        dayTotals={dayTotals}
+        accentDayIndex={accentDayIndex}
+        currency={currency}
+        taste={taste}
+        weather={weatherDay?.weather ?? null}
+        weatherDate={weatherDay ? formatDayDate(weatherDay.date) : ""}
       />
 
       <div className="mt-4">

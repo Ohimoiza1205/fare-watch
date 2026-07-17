@@ -58,6 +58,7 @@ export default async function TripPage({
         travellers={trip.travellers}
         currency={trip.currency}
         budgetCeiling={trip.budget_ceiling}
+        taste={trip.taste}
       />
     </main>
   );
