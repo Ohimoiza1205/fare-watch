@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DURATION_ROLL } from "@/lib/motion";
 
 // Counts from the old fare to the new one when a poll changes the price,
 // decelerating as it lands. It does not animate on first paint: the initial
@@ -24,7 +25,7 @@ export function PriceRoll({ value, className }: { value: number; className?: str
       };
     }
 
-    const duration = 900;
+    const duration = DURATION_ROLL;
     let started: number | null = null;
     const step = (now: number) => {
       if (started === null) started = now;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { DURATION_DRAW } from "@/lib/motion";
 
 // The price line is the anchor of a row. A smooth path with a soft area fill
 // carries presence, while colour still does one job: the line and current point
@@ -60,7 +61,7 @@ export function Sparkline({
 
     let raf = 0;
     let start: number | null = null;
-    const duration = 700;
+    const duration = DURATION_DRAW;
     const step = (now: number) => {
       if (start === null) start = now;
       const t = Math.min(1, (now - start) / duration);
@@ -109,7 +110,7 @@ export function Sparkline({
       <path
         d={area}
         fill={`url(#${gradientId})`}
-        style={{ opacity: drawn ? 1 : 0, transition: "opacity 500ms ease-out" }}
+        style={{ opacity: drawn ? 1 : 0, transition: "opacity var(--d-fade) var(--ease)" }}
       />
 
       <path

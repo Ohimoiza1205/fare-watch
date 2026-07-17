@@ -74,7 +74,7 @@ export function Sidebar() {
             const active = isActive(item, pathname);
             const inner = (
               <span
-                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-[var(--d1)] ${
                   active
                     ? ""
                     : item.href
@@ -115,8 +115,8 @@ export function Sidebar() {
 
       <div className="m-3 flex items-center gap-3 rounded-lg p-3 surface-1">
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white"
-          style={{ background: "var(--ink-2)" }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
+          style={{ background: "var(--ink-2)", color: "var(--on-ink)" }}
         >
           Y
         </span>

@@ -74,8 +74,8 @@ export function TripHeaderBar({
         <button
           type="button"
           onClick={share}
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-          style={{ background: "var(--ink-0)" }}
+          className="rounded-md px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
+          style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
         >
           {shared ? "Link copied" : "Share trip"}
         </button>

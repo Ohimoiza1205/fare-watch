@@ -29,7 +29,7 @@ export function RouteRow({ summary }: { summary: RouteSummary }) {
   const ccy = summary.latest?.currency ?? watch.currency;
 
   return (
-    <div className="group relative rounded-xl transition-colors duration-200 hover:bg-[var(--surface-1)]">
+    <div className="group relative rounded-xl transition-colors duration-[var(--d1)] hover:bg-[var(--surface-1)]">
       <span
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
         style={{ background: open ? "transparent" : "var(--hairline)" }}
@@ -70,7 +70,7 @@ export function RouteRow({ summary }: { summary: RouteSummary }) {
       {/* secondary detail, quiet until the row is looked at, reserved so the
           run does not shift on hover */}
       <div
-        className={`${ROW_GRID} pointer-events-none px-3 pb-4 opacity-0 transition-opacity duration-200 ${
+        className={`${ROW_GRID} pointer-events-none px-3 pb-4 opacity-0 transition-opacity duration-[var(--d1)] ${
           open ? "" : "group-hover:opacity-100"
         }`}
       >

@@ -32,12 +32,29 @@
   --warn: #f85149; /* a plan over the traveller's own maximum */
   --warn-soft: rgba(248, 81, 73, 0.14);
 
+  /* fixed foregrounds for filled controls. Black holds on the accent fill and
+     white on the ink fills in both themes, so each token keeps one value */
+  --on-accent: #000;
+  --on-ink: #fff;
+
+  /* the day map. Pins are mid-tone with white numerals in both themes, and the
+     route line and pin shadow stay constant over the light tiles */
+  --on-marker: #fff;
+  --map-route: #475569;
+  --shadow-marker: 0 1px 5px rgba(15, 23, 42, 0.4);
+
   /* motion. weighted deceleration, noticeable but never slow */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
   --d1: 200ms;
   --d2: 320ms;
   --d3: 460ms;
+
+  /* script-driven motion. src/lib/motion.ts mirrors the same values for the
+     rAF animations; change both together */
+  --d-draw: 700ms;
+  --d-roll: 900ms;
+  --d-fade: 500ms;
 
   /* restrained elevation */
   --elev-float: 0 1px 0 var(--edge-light) inset,
@@ -116,6 +133,13 @@ body {
   --accent-soft: rgba(22, 163, 74, 0.14);
   --warn: #e11d48;
   --warn-soft: rgba(225, 29, 72, 0.14);
+
+  /* same as the dark theme; these pairings are theme-independent */
+  --on-accent: #000;
+  --on-ink: #fff;
+  --on-marker: #fff;
+  --map-route: #475569;
+  --shadow-marker: 0 1px 5px rgba(15, 23, 42, 0.4);
 
   --elev-raise: 0 1px 0 var(--edge-light) inset,
     0 10px 26px -16px rgba(15, 23, 42, 0.2);

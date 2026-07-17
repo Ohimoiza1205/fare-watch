@@ -21,10 +21,10 @@ function TripLine({ trip }: { trip: TripSummary }) {
   return (
     <Link
       href={`/plan/${trip.id}`}
-      className="group grid grid-cols-[1fr_auto] items-baseline gap-6 border-b py-4 transition-colors duration-200"
+      className="group grid grid-cols-[1fr_auto] items-baseline gap-6 border-b py-4 transition-colors duration-[var(--d1)]"
       style={{ borderColor: "var(--hairline)" }}
     >
-      <span className="text-sm ink-1 transition-colors duration-200 group-hover:text-[var(--ink-0)]">
+      <span className="text-sm ink-1 transition-colors duration-[var(--d1)] group-hover:text-[var(--ink-0)]">
         {trip.destLabel ?? trip.destination}
       </span>
       <span className="flex items-baseline gap-4 text-xs ink-3">

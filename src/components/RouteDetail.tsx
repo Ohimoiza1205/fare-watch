@@ -50,8 +50,8 @@ export function RouteDetail({ summary }: { summary: RouteSummary }) {
           href={latest.deep_link}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center rounded-md px-4 py-2.5 text-sm font-medium text-black transition-opacity duration-200 hover:opacity-90"
-          style={{ backgroundColor: "var(--accent)" }}
+          className="mt-6 inline-flex items-center rounded-md px-4 py-2.5 text-sm font-medium transition-opacity duration-[var(--d1)] hover:opacity-90"
+          style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
         >
           Open booking
         </a>

@@ -133,8 +133,8 @@ export function AssistantPanel({
                   type="button"
                   onClick={() => apply(o, suggestion.itemRef)}
                   disabled={applying === o.venue}
-                  className="rounded-md px-2 py-1 text-[0.6875rem] font-medium text-white"
-                  style={{ background: "var(--ink-1)" }}
+                  className="rounded-md px-2 py-1 text-[0.6875rem] font-medium"
+                  style={{ background: "var(--ink-1)", color: "var(--on-ink)" }}
                 >
                   {applying === o.venue ? "Using" : "Use"}
                 </button>
@@ -168,8 +168,8 @@ export function AssistantPanel({
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="rounded-md px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
-          style={{ background: "var(--ink-0)" }}
+          className="rounded-md px-3 py-2 text-xs font-medium disabled:opacity-50"
+          style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
         >
           {busy ? "..." : "Ask"}
         </button>

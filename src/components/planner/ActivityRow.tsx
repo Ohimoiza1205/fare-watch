@@ -123,7 +123,7 @@ export function ActivityRow({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex w-full gap-3 rounded-xl p-2.5 text-left surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-200 ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)]"
+          className="flex w-full gap-3 rounded-xl p-2.5 text-left surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)]"
         >
           <VenueImage
             category={item.category}
@@ -152,7 +152,7 @@ export function ActivityRow({
               isEstimated={item.isEstimated}
               className="text-sm"
             />
-            <span className="text-[0.625rem] ink-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <span className="text-[0.625rem] ink-3 opacity-0 transition-opacity duration-[var(--d1)] group-hover:opacity-100">
               details
             </span>
           </div>
@@ -224,8 +224,8 @@ export function ActivityRow({
                           type="button"
                           onClick={() => apply(o)}
                           disabled={applying === o.venue}
-                          className="rounded-md px-2 py-1 text-[0.6875rem] font-medium text-white"
-                          style={{ background: "var(--ink-1)" }}
+                          className="rounded-md px-2 py-1 text-[0.6875rem] font-medium"
+                          style={{ background: "var(--ink-1)", color: "var(--on-ink)" }}
                         >
                           {applying === o.venue ? "Using" : "Use"}
                         </button>

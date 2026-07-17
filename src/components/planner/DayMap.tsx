@@ -23,8 +23,8 @@ export type MapStop = {
 function markerHtml(n: number, color: string): string {
   return (
     `<div style="width:22px;height:22px;border-radius:11px;background:${color};` +
-    `color:#fff;display:flex;align-items:center;justify-content:center;` +
-    `font:600 11px/1 ui-monospace,monospace;box-shadow:0 1px 5px rgba(15,23,42,.4)">${n}</div>`
+    `color:var(--on-marker);display:flex;align-items:center;justify-content:center;` +
+    `font:600 11px/1 ui-monospace,monospace;box-shadow:var(--shadow-marker)">${n}</div>`
   );
 }
 
@@ -63,7 +63,7 @@ export function DayMap({ stops }: { stops: MapStop[] }) {
 
         if (points.length > 1) {
           L.polyline(points, {
-            color: "#475569",
+            color: "var(--map-route)",
             weight: 2,
             opacity: 0.7,
             dashArray: "1 6",

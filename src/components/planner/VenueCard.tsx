@@ -34,7 +34,7 @@ export function VenueCard({
     : `Confirmed price via ${item.priceSource ?? "a real source"}.`;
 
   return (
-    <div className="surface-2 rounded-xl shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-200 ease-[var(--ease)] hover:-translate-y-1 hover:shadow-[var(--elev-float)]">
+    <div className="surface-2 rounded-xl shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:-translate-y-1 hover:shadow-[var(--elev-float)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

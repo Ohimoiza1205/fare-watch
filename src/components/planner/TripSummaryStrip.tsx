@@ -1,6 +1,7 @@
 "use client";
 
 import { PriceRoll } from "@/components/PriceRoll";
+import { hueBadgeStyle } from "@/lib/planner/categoryColor";
 
 // A compact strip of trip stats at the foot of the plan. Each stat has a small
 // tinted icon, and the money figures roll to their new value when a swap changes
@@ -16,7 +17,7 @@ function Icon({
   return (
     <span
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-      style={{ background: `hsl(${hue} 45% 92%)`, color: `hsl(${hue} 45% 38%)` }}
+      style={hueBadgeStyle(hue)}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         {children}

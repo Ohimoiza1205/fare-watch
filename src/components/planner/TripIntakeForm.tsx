@@ -24,7 +24,7 @@ const TASTE_LABEL: Record<TasteTag, string> = {
 };
 
 const FIELD =
-  "w-full border-b border-[var(--hairline-strong)] bg-transparent pb-1.5 ink-0 outline-none transition-colors duration-200 focus:border-[var(--ink-2)] placeholder:text-[var(--ink-4)]";
+  "w-full border-b border-[var(--hairline-strong)] bg-transparent pb-1.5 ink-0 outline-none transition-colors duration-[var(--d1)] focus:border-[var(--ink-2)] placeholder:text-[var(--ink-4)]";
 const LABEL = "eyebrow";
 
 export function TripIntakeForm() {
@@ -241,8 +241,8 @@ export function TripIntakeForm() {
       <button
         type="submit"
         disabled={busy}
-        className="mt-10 inline-flex items-center rounded-md px-5 py-2.5 text-sm font-medium text-black transition-opacity duration-200 disabled:opacity-60"
-        style={{ backgroundColor: "var(--accent)" }}
+        className="mt-10 inline-flex items-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity duration-[var(--d1)] disabled:opacity-60"
+        style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
       >
         {busy ? "Generating the trip" : "Generate the trip"}
       </button>
@@ -264,7 +264,7 @@ function ModeButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-200 ${
+      className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-[var(--d1)] ${
         active
           ? "border-[var(--hairline-strong)] surface-2 ink-0"
           : "border-[var(--hairline)] ink-3 hover:text-[var(--ink-1)]"
@@ -289,7 +289,7 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-200 ${
+      className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-[var(--d1)] ${
         active
           ? "border-[var(--hairline-strong)] surface-2 ink-0"
           : "border-[var(--hairline)] ink-3 hover:text-[var(--ink-1)]"
