@@ -1,10 +1,13 @@
 export type PriceRow = { price: number; observed_at: string };
 
-export type Signal = {
-  fire: boolean;
-  reason: "mistake" | "threshold" | "percentile" | "drop" | null;
+// Discriminated on fire so a checked signal carries a non-null reason.
+export type FiredSignal = {
+  fire: true;
+  reason: "mistake" | "threshold" | "percentile" | "drop";
   context: string;
 };
+
+export type Signal = FiredSignal | { fire: false; reason: null; context: string };
 
 function percentile(values: number[], p: number): number {
   if (values.length === 0) return Infinity;

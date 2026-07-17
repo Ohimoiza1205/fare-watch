@@ -1,8 +1,20 @@
 import { sendEmail } from "./email";
 import { sendPush } from "./push";
 import { sendWhatsApp } from "./whatsapp";
+import type { FareQuote } from "@/lib/providers/types";
+import type { FiredSignal } from "@/lib/detect/signals";
+import type { WatchRow } from "@/lib/db/queries";
+import type { createServiceClient } from "@/lib/db/client";
 
-export async function dispatch(watch: any, quote: any, signal: any, obsId: number, db: any) {
+type Db = ReturnType<typeof createServiceClient>;
+
+export async function dispatch(
+  watch: WatchRow,
+  quote: FareQuote,
+  signal: FiredSignal,
+  obsId: number,
+  db: Db
+) {
   // debounce: skip if the same reason fired recently. Mistake fares vanish in
   // minutes, so they get a shorter window than the rest.
   const sinceMinutes = signal.reason === "mistake" ? 60 : 720;
