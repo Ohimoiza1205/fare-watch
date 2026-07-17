@@ -1,6 +1,7 @@
 import { getDashboard } from "@/lib/db/queries";
 import { RouteRow } from "@/components/RouteRow";
 import { ROW_GRID } from "@/components/rowGrid";
+import { AssistantChat } from "@/components/AssistantChat";
 
 // The list reflects the latest poll, so read fresh on every request.
 export const dynamic = "force-dynamic";
@@ -57,6 +58,15 @@ export default async function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* subordinate to the list; answers come only from stored tracker data */}
+      <section className="mt-16 max-w-2xl">
+        <h2 className="eyebrow">Assistant</h2>
+        <AssistantChat
+          endpoint="/api/assistant"
+          emptyText="Ask about watched routes, price history, or alerts. Figures come from stored data only."
+        />
+      </section>
     </main>
   );
 }
