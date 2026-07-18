@@ -111,9 +111,9 @@ function pollState(lastPollAt: string | null, cadenceMs: number | null, now: num
 }
 
 const POLL_LABEL: Record<PollState, string> = {
-  live: "POLLING LIVE",
-  overdue: "POLL OVERDUE",
-  unscheduled: "CRON NOT SCHEDULED",
+  live: "Polling live",
+  overdue: "Poll overdue",
+  unscheduled: "Cron not scheduled",
 };
 
 const POLL_COLOR: Record<PollState, string> = {
@@ -184,7 +184,10 @@ export function Sidebar({
           >
             FAREWATCH
           </span>
-          <span className="mt-0.5 flex items-center gap-1.5 text-[10px]" style={{ letterSpacing: "0.07em" }}>
+          <span
+            className="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase"
+            style={{ letterSpacing: "0.07em" }}
+          >
             <span
               className={state === "live" ? "dot-breathe" : undefined}
               style={{
