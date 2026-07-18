@@ -380,6 +380,29 @@ export async function nextUpcomingTrip(db: DB): Promise<NextTrip | null> {
   };
 }
 
+// The most recently created trip, the sidebar's fallback when nothing is
+// ahead: the dynamic link then points at the last trip planned.
+export async function mostRecentTrip(db: DB): Promise<NextTrip | null> {
+  const { data } = await db
+    .from("trip")
+    .select("id, destination, dest_label, dest_lat, dest_lon, start_date, end_date")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+
+  const r = data as Record<string, unknown>;
+  return {
+    id: r.id as string,
+    destination: r.destination as string,
+    destLabel: (r.dest_label as string | null) ?? null,
+    destLat: (r.dest_lat as number | null) ?? null,
+    destLon: (r.dest_lon as number | null) ?? null,
+    startDate: (r.start_date as string) ?? "",
+    endDate: (r.end_date as string | null) ?? null,
+  };
+}
+
 export async function listTrips(
   db: DB,
   userId: string | null

@@ -200,6 +200,18 @@ export async function listAlerts(limit = 200): Promise<AlertLogRow[]> {
   });
 }
 
+// The newest observation timestamp alone, for the sidebar's poll status line.
+export async function latestObservationAt(): Promise<string | null> {
+  const db = createServiceClient();
+  const { data } = await db
+    .from("observation")
+    .select("observed_at")
+    .order("observed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { observed_at: string } | null)?.observed_at ?? null;
+}
+
 export async function getDashboard(): Promise<Dashboard> {
   const db = createServiceClient();
 

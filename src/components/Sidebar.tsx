@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { WeatherSnapshot } from "@/lib/planner/types";
+import { useNow } from "@/lib/hooks";
 
-// The left rail. The wordmark sits at the top, the destinations run down the
-// middle with the active one in the accent, and a quiet user card is pinned at
-// the bottom. The tracker and the planner both live here. It reads on the dark
-// tracker and the blue planner because it is built from the shared tokens.
+// The left rail. Dark in both themes for continuity, so it reads from the
+// root tokens and never from the planner scope. The wordmark and live poll
+// status sit at the top, the nav runs in three labelled groups, the weather
+// card rides under the planner group, and the poll cadence strip holds the
+// bottom. Every state shown here is real: the status line and the strip are
+// derived from the newest observation timestamp and the configured cron
+// cadence, and say so plainly when either is missing.
 
 type Glyph = (p: { className?: string }) => React.ReactElement;
 
@@ -30,29 +34,29 @@ function G({ children, className }: { children: React.ReactNode; className?: str
 
 const ICON: Record<string, Glyph> = {
   home: (p) => <G {...p}><path d="M4 11l8-6 8 6M6 10v9h12v-9" /></G>,
-  trips: (p) => <G {...p}><path d="M4 7h16v12H4zM4 7l3-3h10l3 3M9 11h6" /></G>,
   deals: (p) => <G {...p}><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5L12 16.9 7 18.2l1-5.5-4-3.9 5.5-.8z" /></G>,
   watchlist: (p) => <G {...p}><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" /><circle cx="12" cy="12" r="2.5" /></G>,
   alerts: (p) => <G {...p}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0" /></G>,
+  plan: (p) => <G {...p}><path d="M4 7h16v12H4zM4 7l3-3h10l3 3M9 11h6" /></G>,
+  trip: (p) => <G {...p}><path d="M9 20l-5-2V5l5 2 6-2 5 2v13l-5-2-6 2zM9 7v13M15 5v13" /></G>,
   profile: (p) => <G {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></G>,
   settings: (p) => <G {...p}><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" /></G>,
 };
 
-type Item = { id: string; label: string; href: string };
+function PlaneGlyph({ className }: { className?: string }) {
+  return (
+    <G className={className}>
+      <path d="M21 4L3 11l7 2.5L12.5 21l3-6.5L21 4z" />
+    </G>
+  );
+}
 
-const ITEMS: Item[] = [
-  { id: "home", label: "Home", href: "/" },
-  { id: "trips", label: "Trips", href: "/plan" },
-  { id: "deals", label: "Deals", href: "/deals" },
-  { id: "watchlist", label: "Watchlist", href: "/watchlist" },
-  { id: "alerts", label: "Alerts", href: "/alerts" },
-  { id: "profile", label: "Profile", href: "/profile" },
-  { id: "settings", label: "Settings", href: "/settings" },
-];
+type Item = { id: string; label: string; href: string };
+type Group = { label: string; items: Item[] };
 
 function isActive(item: Item, pathname: string): boolean {
   if (item.href === "/") return pathname === "/";
-  return pathname.startsWith(item.href);
+  return pathname.startsWith(item.href) || pathname === item.href;
 }
 
 export type SidebarWeather = {
@@ -60,100 +64,212 @@ export type SidebarWeather = {
   snapshot: WeatherSnapshot;
 };
 
-// Weather for the next trip's destination, kept quiet: figures, unit, and the
-// condition in plain words. An estimated snapshot dims and takes a tilde, the
-// same treatment estimated prices get in the planner.
 function WeatherCard({ weather }: { weather: SidebarWeather }) {
   const { tempMax, tempMin, unit, summary, estimated } = weather.snapshot;
   return (
-    <div className="mx-3 px-3 py-2">
-      <span className="block truncate text-xs ink-2">{weather.destLabel}</span>
+    <div className="mx-3 mt-1 rounded-lg px-3 py-2" style={{ background: "var(--surface-1)" }}>
+      <span className="block truncate text-xs" style={{ color: "var(--ink-2)" }}>
+        {weather.destLabel}
+      </span>
       <span
-        className={`mt-1 flex items-baseline gap-2 text-xs ${estimated ? "ink-3" : "ink-2"}`}
+        className="mt-1 flex items-baseline gap-2 text-xs"
+        style={{ color: estimated ? "var(--ink-3)" : "var(--ink-2)" }}
       >
         {estimated && (
-          <span aria-hidden="true" className="ink-3">
+          <span aria-hidden="true" style={{ color: "var(--ink-3)" }}>
             ~
           </span>
         )}
-        <span className={`num ${estimated ? "ink-2" : "ink-1"}`}>
+        <span className="num" style={{ color: estimated ? "var(--ink-2)" : "var(--ink-1)" }}>
           {tempMax != null ? Math.round(tempMax) : "--"}
         </span>
-        <span className="num ink-3">
+        <span className="num" style={{ color: "var(--ink-3)" }}>
           {tempMin != null ? Math.round(tempMin) : "--"}
         </span>
-        <span className="ink-4">{unit}</span>
+        <span style={{ color: "var(--ink-4)" }}>{unit}</span>
         <span className="truncate lowercase">{summary}</span>
       </span>
     </div>
   );
 }
 
-export function Sidebar({ weather }: { weather?: SidebarWeather | null }) {
+function relativeAge(ms: number): string {
+  const m = Math.floor(ms / 60_000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
+type PollState = "live" | "overdue" | "unscheduled";
+
+function pollState(lastPollAt: string | null, cadenceMs: number | null, now: number): PollState {
+  if (cadenceMs == null) return "unscheduled";
+  if (lastPollAt == null) return "overdue";
+  return now - new Date(lastPollAt).getTime() <= cadenceMs * 2 ? "live" : "overdue";
+}
+
+const POLL_LABEL: Record<PollState, string> = {
+  live: "POLLING LIVE",
+  overdue: "POLL OVERDUE",
+  unscheduled: "CRON NOT SCHEDULED",
+};
+
+const POLL_COLOR: Record<PollState, string> = {
+  live: "var(--cool)",
+  overdue: "var(--amber)",
+  unscheduled: "var(--ink-3)",
+};
+
+export function Sidebar({
+  weather,
+  lastPollAt,
+  cadenceMs,
+  tripLink,
+}: {
+  weather?: SidebarWeather | null;
+  lastPollAt: string | null;
+  cadenceMs: number | null;
+  tripLink: { label: string; href: string } | null;
+}) {
   const pathname = usePathname();
+  const now = useNow(30_000);
+
+  const state = pollState(lastPollAt, cadenceMs, now);
+  const elapsed = lastPollAt != null ? now - new Date(lastPollAt).getTime() : null;
+
+  const groups: Group[] = [
+    {
+      label: "Tracker",
+      items: [
+        { id: "home", label: "Home", href: "/" },
+        { id: "deals", label: "Deals", href: "/deals" },
+        { id: "watchlist", label: "Watchlist", href: "/watchlist" },
+        { id: "alerts", label: "Alerts", href: "/alerts" },
+      ],
+    },
+    {
+      label: "Planner",
+      items: [
+        { id: "plan", label: "Plan a trip", href: "/plan" },
+        ...(tripLink ? [{ id: "trip", label: tripLink.label, href: tripLink.href }] : []),
+      ],
+    },
+    {
+      label: "Account",
+      items: [
+        { id: "profile", label: "Profile", href: "/profile" },
+        { id: "settings", label: "Settings", href: "/settings" },
+      ],
+    },
+  ];
 
   return (
     <aside
-      className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r md:flex surface-2"
-      style={{ borderColor: "var(--hairline)" }}
+      className="sticky top-0 z-10 hidden h-screen w-56 shrink-0 flex-col border-r md:flex"
+      style={{ borderColor: "var(--hairline)", background: "var(--surface-1)" }}
     >
-      <div className="px-5 py-5">
-        <span className="num text-sm tracking-tight ink-0">FareWatch</span>
-      </div>
-
-      <nav className="flex-1 px-3" aria-label="Primary">
-        <ul className="space-y-0.5">
-          {ITEMS.map((item) => {
-            const Icon = ICON[item.id];
-            const active = isActive(item, pathname);
-            const inner = (
-              <span
-                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-[var(--d1)] ${
-                  active
-                    ? ""
-                    : "ink-2 hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
-                }`}
-                style={
-                  active
-                    ? { background: "var(--accent-soft)", color: "var(--accent)" }
-                    : undefined
-                }
-              >
-                {active && (
-                  <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full"
-                    style={{ background: "var(--accent)" }}
-                  />
-                )}
-                <Icon className="h-[18px] w-[18px]" />
-                {item.label}
-              </span>
-            );
-
-            return (
-              <li key={item.id}>
-                <Link href={item.href} aria-current={active ? "page" : undefined}>
-                  {inner}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {weather && <WeatherCard weather={weather} />}
-
-      <div className="m-3 flex items-center gap-3 rounded-lg p-3 surface-1">
+      <div className="flex items-center gap-2.5 px-4 py-4">
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
-          style={{ background: "var(--ink-2)", color: "var(--on-ink)" }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg"
+          style={{ background: "var(--cool-soft)", color: "var(--cool)" }}
         >
-          Y
+          <PlaneGlyph className="h-4 w-4" />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm ink-1">You</span>
-          <span className="block truncate text-xs ink-3">Local account</span>
+          <span
+            className="heading block text-sm tracking-wide"
+            style={{ color: "var(--ink-0)", letterSpacing: "0.06em" }}
+          >
+            FAREWATCH
+          </span>
+          <span className="mt-0.5 flex items-center gap-1.5 text-[10px]" style={{ letterSpacing: "0.07em" }}>
+            <span
+              className={state === "live" ? "dot-breathe" : undefined}
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "var(--r-pill)",
+                background: POLL_COLOR[state],
+              }}
+            />
+            <span style={{ color: POLL_COLOR[state] }}>{POLL_LABEL[state]}</span>
+          </span>
         </span>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3" aria-label="Primary">
+        {groups.map((group) => (
+          <div key={group.label} className="mb-3">
+            <div
+              className="px-3 pb-1 pt-2 text-[10px] uppercase"
+              style={{ letterSpacing: "0.1em", color: "var(--ink-4)" }}
+            >
+              {group.label}
+            </div>
+            <ul className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = ICON[item.id];
+                const active = isActive(item, pathname);
+                return (
+                  <li key={item.id}>
+                    <Link href={item.href} aria-current={active ? "page" : undefined}>
+                      <span
+                        className="pressable relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                        style={
+                          active
+                            ? { background: "var(--cool-soft)", color: "var(--cool)" }
+                            : { color: "var(--ink-2)" }
+                        }
+                      >
+                        {active && (
+                          <span
+                            className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full"
+                            style={{ background: "var(--cool)" }}
+                          />
+                        )}
+                        {Icon && <Icon className="h-[18px] w-[18px]" />}
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            {group.label === "Planner" && weather && <WeatherCard weather={weather} />}
+          </div>
+        ))}
+      </nav>
+
+      <div className="border-t px-4 py-3" style={{ borderColor: "var(--hairline)" }}>
+        <div className="flex items-baseline justify-between">
+          <span className="text-[10px] uppercase" style={{ letterSpacing: "0.08em", color: "var(--ink-4)" }}>
+            Poll cadence
+          </span>
+          <span className="num text-[11px]" style={{ color: "var(--ink-3)" }}>
+            {state === "unscheduled"
+              ? "not scheduled"
+              : elapsed != null
+                ? `${relativeAge(elapsed)} ago`
+                : "no polls yet"}
+          </span>
+        </div>
+        {cadenceMs != null && (
+          <div
+            className="mt-2 h-1 overflow-hidden rounded-full"
+            style={{ background: "var(--surface-3)" }}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${elapsed != null ? Math.min(100, (elapsed / cadenceMs) * 100) : 100}%`,
+                background: state === "overdue" ? "var(--amber)" : "var(--cool)",
+                transition: "width var(--d3) var(--ease)",
+              }}
+            />
+          </div>
+        )}
       </div>
     </aside>
   );
