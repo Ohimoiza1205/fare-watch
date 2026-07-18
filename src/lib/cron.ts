@@ -10,12 +10,12 @@ import { join } from "path";
 type CronEntry = { path: string; schedule: string };
 
 // Supports the shapes this project would actually schedule: every N minutes,
-// every N hours, or daily at a fixed hour. Anything else returns null and the
-// caller treats the cadence as unknown.
+// every N hours, daily at a fixed hour, or every N days at a fixed hour.
+// Anything else returns null and the caller treats the cadence as unknown.
 export function cadenceMsFromSchedule(schedule: string): number | null {
   const parts = schedule.trim().split(/\s+/);
   if (parts.length !== 5) return null;
-  const [min, hour] = parts;
+  const [min, hour, dom] = parts;
 
   const everyMin = min.match(/^\*\/(\d+)$/);
   if (everyMin && hour === "*") return Number(everyMin[1]) * 60_000;
@@ -23,7 +23,11 @@ export function cadenceMsFromSchedule(schedule: string): number | null {
   const everyHour = hour.match(/^\*\/(\d+)$/);
   if (/^\d+$/.test(min) && everyHour) return Number(everyHour[1]) * 3_600_000;
 
-  if (/^\d+$/.test(min) && /^\d+$/.test(hour)) return 24 * 3_600_000;
+  if (/^\d+$/.test(min) && /^\d+$/.test(hour)) {
+    const everyDay = dom.match(/^\*\/(\d+)$/);
+    if (everyDay) return Number(everyDay[1]) * 24 * 3_600_000;
+    if (dom === "*") return 24 * 3_600_000;
+  }
 
   return null;
 }
