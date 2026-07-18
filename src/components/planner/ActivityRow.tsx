@@ -61,7 +61,7 @@ function Node({
           aria-pressed={selected}
           aria-label="Show on map"
           title="Show on map"
-          className="shrink-0 rounded-full transition-transform duration-[var(--d1)] ease-[var(--ease)] hover:scale-110"
+          className="pressable shrink-0 rounded-full hover:scale-110"
         >
           {face}
         </button>
@@ -275,7 +275,7 @@ export function ActivityRow({
   }
 
   const ghostControl =
-    "flex h-6 w-6 items-center justify-center rounded-md transition-[opacity,color] duration-[var(--d1)] ease-[var(--ease)]";
+    "pressable flex h-6 w-6 items-center justify-center rounded-md";
   const ghostHidden =
     "opacity-0 ink-3 hover:text-[var(--ink-1)] group-hover/card:opacity-100 group-focus-within/card:opacity-100";
 
@@ -397,7 +397,7 @@ export function ActivityRow({
                     role="menuitem"
                     onClick={startSwap}
                     disabled={item.locked}
-                    className={`block w-full rounded-md px-2.5 py-1.5 text-left text-xs ${
+                    className={`pressable block w-full rounded-md px-2.5 py-1.5 text-left text-xs ${
                       item.locked
                         ? "ink-4"
                         : "ink-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
@@ -415,7 +415,7 @@ export function ActivityRow({
                     role="menuitem"
                     onClick={handleRemove}
                     disabled={removing}
-                    className="block w-full rounded-md px-2.5 py-1.5 text-left text-xs ink-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
+                    className="pressable block w-full rounded-md px-2.5 py-1.5 text-left text-xs ink-1 hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
                   >
                     {removing ? "Removing" : "Remove"}
                   </button>
@@ -459,7 +459,7 @@ export function ActivityRow({
                     type="button"
                     onClick={loadAlternatives}
                     disabled={loading}
-                    className="rounded-md border px-2.5 py-1 text-xs ink-1 transition-colors hover:text-[var(--ink-0)]"
+                    className="pressable rounded-md border px-2.5 py-1 text-xs ink-1 hover:text-[var(--ink-0)]"
                     style={{ borderColor: "var(--hairline-strong)" }}
                   >
                     {loading ? "Finding real options" : "Swap this activity"}
@@ -492,7 +492,7 @@ export function ActivityRow({
                           type="button"
                           onClick={() => apply(o)}
                           disabled={applying === o.venue}
-                          className="rounded-md px-2 py-1 text-[0.6875rem] font-medium"
+                          className="pressable rounded-md px-2 py-1 text-[0.6875rem] font-medium"
                           style={{ background: "var(--ink-1)", color: "var(--on-ink)" }}
                         >
                           {applying === o.venue ? "Using" : "Use"}

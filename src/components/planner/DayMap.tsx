@@ -75,7 +75,7 @@ function popupHtml(s: MapStop): string {
     `</span>` +
     price +
     `<div class="num" style="margin-top:4px;font-size:0.6875rem;color:var(--ink-3)">${esc(s.time)}</div>` +
-    `<button type="button" data-show-plan style="margin-top:8px;display:block;padding:0;border:0;` +
+    `<button type="button" data-show-plan class="pressable" style="margin-top:8px;display:block;padding:0;border:0;` +
     `background:none;cursor:pointer;font-size:0.75rem;color:var(--ink-2);text-decoration:underline;` +
     `text-decoration-color:var(--hairline-strong);text-underline-offset:2px">Show in plan</button>` +
     `</div>`

@@ -63,7 +63,7 @@ export function DayStrip({
             role="tab"
             aria-selected={isSelected}
             onClick={() => onSelect(day.dayIndex)}
-            className={`w-[4.75rem] shrink-0 rounded-lg px-2.5 py-2 text-left transition-[transform,box-shadow,background-color] duration-[var(--d1)] ease-[var(--ease)] ${
+            className={`pressable w-[4.75rem] shrink-0 rounded-lg px-2.5 py-2 text-left ${
               isSelected
                 ? "surface-2 -translate-y-0.5 shadow-[var(--elev-raise)]"
                 : "surface-1 hover:-translate-y-0.5"

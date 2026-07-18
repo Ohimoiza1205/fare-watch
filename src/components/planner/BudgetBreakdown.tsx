@@ -67,7 +67,7 @@ export function BudgetBreakdown({
       <button
         type="button"
         onClick={() => setFull((v) => !v)}
-        className="mt-4 text-xs ink-2 underline decoration-[var(--hairline-strong)] underline-offset-2 transition-colors hover:text-[var(--ink-0)]"
+        className="pressable mt-4 text-xs ink-2 underline decoration-[var(--hairline-strong)] underline-offset-2 hover:text-[var(--ink-0)]"
       >
         {full ? "View day budget" : "View full budget"}
       </button>

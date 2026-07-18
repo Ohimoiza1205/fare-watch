@@ -193,6 +193,24 @@ body {
   transition: opacity var(--d1) var(--ease);
 }
 
+/*
+  Press feedback for buttons and toggles. The pressed state lands at once so a
+  tap never feels inert; the release settles back on the standard duration and
+  easing. One mechanism for every control; reduced motion collapses it below.
+  The property list is the union of what controls transition, so this composes
+  with their hover states instead of switching them off.
+*/
+.pressable {
+  transition-property: scale, transform, translate, opacity, color,
+    background-color, border-color, box-shadow;
+  transition-duration: var(--d1);
+  transition-timing-function: var(--ease);
+}
+.pressable:active {
+  scale: 0.97;
+  transition-duration: 1ms;
+}
+
 /* A brief neutral ring on the row that show in plan just landed on. */
 @keyframes planner-locate {
   from {

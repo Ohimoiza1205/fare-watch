@@ -75,7 +75,7 @@ function DatesChip({
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ink-2 surface-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
+        className="pressable flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ink-2 surface-1 hover:text-[var(--ink-0)]"
       >
         <svg
           width="12"
@@ -244,7 +244,7 @@ export function TripHeaderBar({
               type="button"
               onClick={() => setShowBrief((v) => !v)}
               aria-expanded={showBrief}
-              className="rounded-full px-2.5 py-1 text-xs ink-2 surface-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
+              className="pressable rounded-full px-2.5 py-1 text-xs ink-2 surface-1 hover:text-[var(--ink-0)]"
             >
               {showBrief ? "Hide trip brief" : "View trip brief"}
             </button>
@@ -255,7 +255,7 @@ export function TripHeaderBar({
           <button
             type="button"
             onClick={share}
-            className="rounded-md border px-3 py-1.5 text-sm ink-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
+            className="pressable rounded-md border px-3 py-1.5 text-sm ink-1 hover:text-[var(--ink-0)]"
             style={{ borderColor: "var(--hairline-strong)" }}
           >
             <span aria-live="polite">{shared ? "Link copied" : "Share trip"}</span>
@@ -263,7 +263,7 @@ export function TripHeaderBar({
           <button
             type="button"
             onClick={goToAssistant}
-            className="rounded-md px-3 py-1.5 text-sm font-medium transition-opacity duration-[var(--d1)] hover:opacity-90"
+            className="pressable rounded-md px-3 py-1.5 text-sm font-medium hover:opacity-90"
             style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
           >
             Ask the assistant

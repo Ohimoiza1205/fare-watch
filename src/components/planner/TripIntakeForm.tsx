@@ -241,7 +241,7 @@ export function TripIntakeForm() {
       <button
         type="submit"
         disabled={busy}
-        className="mt-10 inline-flex items-center rounded-md px-5 py-2.5 text-sm font-medium transition-opacity duration-[var(--d1)] disabled:opacity-60"
+        className="pressable mt-10 inline-flex items-center rounded-md px-5 py-2.5 text-sm font-medium disabled:opacity-60"
         style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
       >
         {busy ? "Generating the trip" : "Generate the trip"}
@@ -264,7 +264,7 @@ function ModeButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-[var(--d1)] ${
+      className={`pressable rounded-md border px-3 py-1.5 text-sm ${
         active
           ? "border-[var(--hairline-strong)] surface-2 ink-0"
           : "border-[var(--hairline)] ink-3 hover:text-[var(--ink-1)]"
@@ -289,7 +289,7 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-[var(--d1)] ${
+      className={`pressable rounded-full border px-3.5 py-1.5 text-sm ${
         active
           ? "border-[var(--hairline-strong)] surface-2 ink-0"
           : "border-[var(--hairline)] ink-3 hover:text-[var(--ink-1)]"

@@ -88,7 +88,7 @@ function AddActivity({
       <button
         type="button"
         onClick={() => setMode("pick")}
-        className="w-full rounded-xl border border-dashed px-3 py-2.5 text-left text-sm ink-3 transition-colors duration-[var(--d1)] hover:text-[var(--ink-2)]"
+        className="pressable w-full rounded-xl border border-dashed px-3 py-2.5 text-left text-sm ink-3 hover:text-[var(--ink-2)]"
         style={{ borderColor: "var(--hairline-strong)" }}
       >
         + Add activity
@@ -107,7 +107,7 @@ function AddActivity({
                 key={c.id}
                 type="button"
                 onClick={() => pick(c.id)}
-                className="rounded-md border px-2 py-1 text-xs ink-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
+                className="pressable rounded-md border px-2 py-1 text-xs ink-1 hover:text-[var(--ink-0)]"
                 style={{ borderColor: "var(--hairline-strong)" }}
               >
                 {c.label}
@@ -149,7 +149,7 @@ function AddActivity({
                       type="button"
                       onClick={() => add(o)}
                       disabled={adding === o.venue}
-                      className="rounded-md px-2 py-1 text-[0.6875rem] font-medium"
+                      className="pressable rounded-md px-2 py-1 text-[0.6875rem] font-medium"
                       style={{ background: "var(--ink-1)", color: "var(--on-ink)" }}
                     >
                       {adding === o.venue ? "Adding" : "Add"}
@@ -167,7 +167,7 @@ function AddActivity({
       <button
         type="button"
         onClick={mode === "options" ? () => setMode("pick") : reset}
-        className="mt-3 text-xs ink-3 transition-colors duration-[var(--d1)] hover:text-[var(--ink-1)]"
+        className="pressable mt-3 text-xs ink-3 hover:text-[var(--ink-1)]"
       >
         {mode === "options" ? "Back to categories" : "Cancel"}
       </button>

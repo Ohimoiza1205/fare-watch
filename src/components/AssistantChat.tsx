@@ -105,7 +105,7 @@ function ProposalCard({
               aria-checked={selected}
               onClick={() => setChoice(o.id)}
               disabled={busy}
-              className={`flex w-full items-baseline gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs ${
+              className={`pressable flex w-full items-baseline gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs ${
                 selected ? "ink-0" : "ink-1"
               }`}
               style={{
@@ -143,7 +143,7 @@ function ProposalCard({
           type="button"
           onClick={() => void confirm()}
           disabled={!choice || busy}
-          className="rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+          className="pressable rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
           style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
         >
           Confirm
@@ -152,7 +152,7 @@ function ProposalCard({
           type="button"
           onClick={() => onResolved("Dismissed.")}
           disabled={busy}
-          className="rounded-md border px-3 py-1.5 text-xs ink-1 disabled:opacity-50"
+          className="pressable rounded-md border px-3 py-1.5 text-xs ink-1 disabled:opacity-50"
           style={{ borderColor: "var(--hairline-strong)" }}
         >
           Dismiss
@@ -311,7 +311,7 @@ export function AssistantChat({
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="rounded-md px-3 py-2 text-xs font-medium disabled:opacity-50"
+          className="pressable rounded-md px-3 py-2 text-xs font-medium disabled:opacity-50"
           style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
         >
           Ask
