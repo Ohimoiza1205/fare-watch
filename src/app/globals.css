@@ -6,31 +6,49 @@
   brightest ink is reserved for numbers, which are the loudest thing on screen.
 */
 :root {
-  --bg: #0a0b0d;
+  --bg: #06080c;
+  --bg-lift: #0a1018;
 
   /* raised surfaces, each a small step of light, so depth reads as tone before
      it reads as shadow */
-  --surface-1: #101216;
-  --surface-2: #15171c;
-  --surface-3: #1b1e24;
+  --surface-1: #0e141d;
+  --surface-2: #111826;
+  --surface-3: #16202e;
 
   /* hairlines and edge light, for elevation without heavy borders */
-  --hairline: rgba(255, 255, 255, 0.055);
-  --hairline-strong: rgba(255, 255, 255, 0.1);
-  --edge-light: rgba(255, 255, 255, 0.045);
+  --hairline: #1a2330;
+  --hairline-strong: #243044;
+  --edge-light: rgba(255, 255, 255, 0.04);
 
   /* ink, brightest to faintest */
-  --ink-0: #edeef1;
-  --ink-1: #b8bbc2;
-  --ink-2: #83878f;
-  --ink-3: #5a5e67;
-  --ink-4: #3c4048;
+  --ink-0: #e6edf3;
+  --ink-1: #c2ccd9;
+  --ink-2: #8b98a9;
+  --ink-3: #5a6573;
+  --ink-4: #3b4450;
 
-  /* colour carries one job, status */
-  --accent: #3fb950; /* a fare below its own tenth percentile, a held day */
-  --accent-soft: rgba(63, 185, 80, 0.14);
-  --warn: #f85149; /* a plan over the traveller's own maximum */
+  /* colour roles. Cool marks normal and watching states and the interactive
+     tint; warm marks live deal intensity; amber marks above normal; red is
+     destructive only. Status colours stay reserved and meaningful. */
+  --cool: #3dd6c4;
+  --cool-soft: rgba(61, 214, 196, 0.1);
+  --warm: #ff7a45;
+  --warm-soft: rgba(255, 122, 69, 0.12);
+  --indigo: #6d7bd8;
+  --amber: #d9a441;
+  --amber-soft: rgba(217, 164, 65, 0.12);
+  --ok: #3fb950;
+  --ok-soft: rgba(63, 185, 80, 0.14);
+
+  /* legacy role names, repointed so existing components inherit the palette */
+  --accent: var(--cool);
+  --accent-soft: var(--cool-soft);
+  --warn: #f85149; /* destructive and over-ceiling only */
   --warn-soft: rgba(248, 81, 73, 0.14);
+
+  /* radii: cards sit between 10 and 16, pills are full */
+  --r-card: 14px;
+  --r-pill: 999px;
 
   /* fixed foregrounds for filled controls. Black holds on the accent fill and
      white on the ink fills in both themes, so each token keeps one value */
@@ -67,11 +85,18 @@
   --color-background: var(--bg);
   --color-foreground: var(--ink-1);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-space-grotesk);
 }
 
 body {
-  background: var(--bg);
+  /* a very soft radial lift toward the top of the dark canvas */
+  background: radial-gradient(
+      120% 60% at 50% -10%,
+      var(--bg-lift) 0%,
+      var(--bg) 70%
+    )
+    var(--bg);
   color: var(--ink-1);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -79,9 +104,16 @@ body {
 
 /* Every figure aligns in true columns and never shifts width as it rolls. */
 .num {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/* Headings speak in one voice across both themes. */
+.heading {
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), system-ui,
+    sans-serif;
+  letter-spacing: -0.01em;
 }
 
 .ink-0 { color: var(--ink-0); }
@@ -114,40 +146,53 @@ body {
   warm grey, and status colour is still reserved for over budget and held.
 */
 .theme-planner {
-  --bg: #cdd9ec;
-  --surface-1: #e8eef8;
+  --bg: #dbe5f5;
+  --bg-lift: #e3ebf8;
+  --surface-1: #edf2fa;
   --surface-2: #ffffff;
   --surface-3: #ffffff;
 
-  --hairline: rgba(15, 23, 42, 0.08);
-  --hairline-strong: rgba(15, 23, 42, 0.14);
+  --hairline: #e2e8f0;
+  --hairline-strong: #cbd6e4;
   --edge-light: rgba(255, 255, 255, 0.9);
 
-  --ink-0: #0f172a;
+  --ink-0: #1e293b;
   --ink-1: #334155;
   --ink-2: #64748b;
   --ink-3: #94a3b8;
-  --ink-4: #cbd5e1;
+  --ink-4: #c3cede;
 
-  --accent: #16a34a;
-  --accent-soft: rgba(22, 163, 74, 0.14);
+  /* the planner's interactive tint is blue; on track is green; cool and warm
+     keep their tracker meanings for the few shared surfaces */
+  --cool: #3a9fd9;
+  --cool-soft: rgba(58, 159, 217, 0.12);
+  --warm: #e8663a;
+  --warm-soft: rgba(232, 102, 58, 0.12);
+  --amber: #b8860b;
+  --amber-soft: rgba(184, 134, 11, 0.12);
+  --ok: #059669;
+  --ok-soft: rgba(5, 150, 105, 0.12);
+
+  --accent: var(--cool);
+  --accent-soft: var(--cool-soft);
   --warn: #e11d48;
   --warn-soft: rgba(225, 29, 72, 0.14);
 
   /* same as the dark theme; these pairings are theme-independent */
-  --on-accent: #000;
+  --on-accent: #fff;
   --on-ink: #fff;
   --on-marker: #fff;
   --map-route: #475569;
   --shadow-marker: 0 1px 5px rgba(15, 23, 42, 0.4);
 
   --elev-raise: 0 1px 0 var(--edge-light) inset,
-    0 10px 26px -16px rgba(15, 23, 42, 0.2);
+    0 8px 30px -12px rgba(20, 40, 70, 0.25);
   --elev-float: 0 1px 0 var(--edge-light) inset,
-    0 26px 50px -24px rgba(15, 23, 42, 0.26),
-    0 4px 12px -6px rgba(15, 23, 42, 0.14);
+    0 26px 50px -24px rgba(20, 40, 70, 0.28),
+    0 4px 12px -6px rgba(20, 40, 70, 0.16);
 
-  background: var(--bg);
+  background: linear-gradient(180deg, var(--bg-lift) 0%, var(--bg) 100%)
+    var(--bg);
   color: var(--ink-1);
 }
 
@@ -225,8 +270,129 @@ body {
 }
 
 /*
+  Glass: translucent surface, backdrop blur, hairline border. Permitted for
+  docked assistant panels, the day strip, the command palette, and modal
+  backdrops. Never for primary data cards.
+*/
+.glass {
+  background: rgba(14, 20, 29, 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.theme-planner .glass,
+.glass-light {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+/* Neumorphic pressed inset for active chips and segmented controls. */
+.pressed-in {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+.theme-planner .pressed-in {
+  box-shadow: inset 0 1px 3px rgba(20, 40, 70, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Aurora blobs. Slow drift only; the Atmosphere component owns placement. */
+@keyframes aurora-a {
+  0% { transform: translate3d(-6%, -4%, 0) scale(1); }
+  50% { transform: translate3d(5%, 6%, 0) scale(1.12); }
+  100% { transform: translate3d(-6%, -4%, 0) scale(1); }
+}
+@keyframes aurora-b {
+  0% { transform: translate3d(4%, 5%, 0) scale(1.08); }
+  50% { transform: translate3d(-5%, -6%, 0) scale(0.96); }
+  100% { transform: translate3d(4%, 5%, 0) scale(1.08); }
+}
+@keyframes aurora-c {
+  0% { transform: translate3d(0%, 3%, 0) scale(0.98); }
+  50% { transform: translate3d(-4%, -3%, 0) scale(1.1); }
+  100% { transform: translate3d(0%, 3%, 0) scale(0.98); }
+}
+
+/* A standby dot that breathes on a 4s cycle. */
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.dot-breathe {
+  animation: breathe 4s var(--ease-inout) infinite;
+}
+
+/* The bell swings once when the alerts page mounts. */
+@keyframes bell-swing {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(14deg); }
+  45% { transform: rotate(-10deg); }
+  68% { transform: rotate(6deg); }
+  86% { transform: rotate(-3deg); }
+  100% { transform: rotate(0deg); }
+}
+.bell-swing {
+  transform-origin: 50% 4%;
+  animation: bell-swing 1.2s var(--ease) 1;
+}
+
+/* A checkmark that draws itself in half a second. Set the dasharray in SVG. */
+@keyframes check-draw {
+  from { stroke-dashoffset: var(--check-length, 24); }
+  to { stroke-dashoffset: 0; }
+}
+.check-draw {
+  stroke-dasharray: var(--check-length, 24);
+  animation: check-draw 0.5s var(--ease) both;
+}
+
+/*
+  Chameleon border, reserved for live deal surfaces only: the Home best-deal
+  card and Deals cards at 40 percent or more off normal. Nowhere else, ever.
+*/
+@keyframes chameleon {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.chameleon-border {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface-2), var(--surface-2)) padding-box,
+    linear-gradient(
+        120deg,
+        var(--warm),
+        var(--indigo),
+        var(--cool),
+        var(--warm)
+      )
+      border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: chameleon 6s linear infinite;
+}
+
+/* A heading whose letter spacing eases open slightly on hover. */
+.kinetic {
+  transition: letter-spacing 0.5s var(--ease);
+}
+.kinetic:hover {
+  letter-spacing: 0.015em;
+}
+
+/* Film grain for the atmosphere layer. */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+}
+
+/*
   Reduced motion collapses every transition and animation to an instant state.
   The counting numbers already land at once in script; this covers the rest.
+  The atmosphere layer disappears entirely rather than freezing mid-drift.
 */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -235,5 +401,8 @@ body {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
     scroll-behavior: auto !important;
+  }
+  .atmosphere {
+    display: none !important;
   }
 }
