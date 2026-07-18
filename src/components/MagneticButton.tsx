@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent,
   type ReactNode,
   type Ref,
@@ -16,6 +17,7 @@ type MagneticButtonProps = {
   href?: string;
   onClick?: () => void;
   className?: string;
+  style?: CSSProperties;
   children: ReactNode;
   type?: "button" | "submit";
   disabled?: boolean;
@@ -31,6 +33,7 @@ export function MagneticButton({
   href,
   onClick,
   className,
+  style,
   children,
   type = "button",
   disabled = false,
@@ -88,6 +91,7 @@ export function MagneticButton({
         ref={ref as Ref<HTMLAnchorElement>}
         href={href}
         className={classes}
+        style={style}
         aria-label={ariaLabel}
         aria-disabled={disabled || undefined}
         onMouseMove={handleMouseMove}
@@ -104,6 +108,7 @@ export function MagneticButton({
       ref={ref as Ref<HTMLButtonElement>}
       type={type}
       className={classes}
+      style={style}
       aria-label={ariaLabel}
       disabled={disabled}
       onMouseMove={handleMouseMove}

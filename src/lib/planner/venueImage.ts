@@ -73,3 +73,19 @@ export async function fetchVenuePhoto(
   void venueName;
   return null;
 }
+
+// The destination half of the same seam: a place-level photo for trip headers
+// and destination cards. The configured provider (Google Places when its key
+// lands) slots in here; until then it resolves null and the warm tile stands
+// in, so nothing is ever a grey or broken box. Results cache forever.
+const destinationCache = new Map<string, string | null>();
+
+export async function fetchDestinationPhoto(
+  place: string
+): Promise<string | null> {
+  const key = place.trim().toLowerCase();
+  if (destinationCache.has(key)) return destinationCache.get(key) ?? null;
+  const url: string | null = null; // no photo provider configured yet
+  destinationCache.set(key, url);
+  return url;
+}

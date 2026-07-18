@@ -16,6 +16,7 @@ export type WatchRow = {
   target_price: number | null;
   currency: string;
   active: boolean;
+  created_at: string;
 };
 
 export type ObservationRow = {
