@@ -1,4 +1,5 @@
 import { WeatherSnapshot } from "./types";
+import { IDENT_HEADERS } from "./http";
 
 // Weather comes from Open-Meteo, which is free and needs no key. A date inside
 // the forecast window gets a real forecast. A date beyond it gets a climate
@@ -62,7 +63,7 @@ async function fetchForecast(
     end_date: opts.date,
   });
 
-  const res = await fetch(`${FORECAST}?${params}`, { cache: "no-store" });
+  const res = await fetch(`${FORECAST}?${params}`, { headers: IDENT_HEADERS, cache: "no-store" });
   if (!res.ok) return null;
   const json = await res.json();
   const d = json?.daily;
@@ -107,7 +108,7 @@ async function fetchArchiveDay(
     start_date: isoDate,
     end_date: isoDate,
   });
-  const res = await fetch(`${ARCHIVE}?${params}`, { cache: "no-store" });
+  const res = await fetch(`${ARCHIVE}?${params}`, { headers: IDENT_HEADERS, cache: "no-store" });
   if (!res.ok) return null;
   const json = await res.json();
   const d = json?.daily;
@@ -259,7 +260,7 @@ async function fetchForecastRange(
     end_date: sorted[sorted.length - 1],
   });
 
-  const res = await fetch(`${FORECAST}?${params}`, { cache: "no-store" });
+  const res = await fetch(`${FORECAST}?${params}`, { headers: IDENT_HEADERS, cache: "no-store" });
   if (!res.ok) return out;
   const json = await res.json();
   const d: DailyBlock = json?.daily ?? {};
@@ -359,7 +360,7 @@ async function fetchArchiveBlock(
     start_date: startIso,
     end_date: endIso,
   });
-  const res = await fetch(`${ARCHIVE}?${params}`, { cache: "no-store" });
+  const res = await fetch(`${ARCHIVE}?${params}`, { headers: IDENT_HEADERS, cache: "no-store" });
   if (!res.ok) return null;
   const json = await res.json();
   return (json?.daily ?? null) as DailyBlock | null;

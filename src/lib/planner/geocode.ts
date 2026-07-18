@@ -10,6 +10,8 @@ export type GeoResult = {
   countryCode: string | null;
 };
 
+import { IDENT_HEADERS } from "./http";
+
 const GEOCODE = "https://geocoding-api.open-meteo.com/v1/search";
 
 type GeocodeRow = {
@@ -33,6 +35,7 @@ export async function geocode(name: string): Promise<GeoResult | null> {
   });
 
   const res = await fetch(`${GEOCODE}?${params}`, {
+    headers: IDENT_HEADERS,
     next: { revalidate: 604800 },
   });
   if (!res.ok) return null;

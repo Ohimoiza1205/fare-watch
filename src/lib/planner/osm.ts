@@ -2,6 +2,8 @@
 // place for the request and the small amount of parsing, so the discovery pass
 // and the single venue lookup cannot drift apart.
 
+import { USER_AGENT } from "./http";
+
 export const OVERPASS = "https://overpass-api.de/api/interpreter";
 
 export type OverpassTags = Record<string, string | undefined>;
