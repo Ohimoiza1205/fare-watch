@@ -87,11 +87,16 @@ export function DayMap({
   selectedId = null,
   onSelect,
   onShowInPlan,
+  animate = true,
 }: {
   stops: MapStop[];
   selectedId?: number | null;
   onSelect?: (id: number | null) => void;
   onShowInPlan?: (id: number) => void;
+  // The parent remounts this component per day, so the glide would fire on
+  // page load too. The parent passes false until its first paint has settled,
+  // and the glide only ever rides a real day switch.
+  animate?: boolean;
 }) {
   const elRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LMap | null>(null);
@@ -99,7 +104,7 @@ export function DayMap({
   const markersRef = useRef<Map<number, LMarker>>(new Map());
   const popupRef = useRef<LPopup | null>(null);
   const [failed, setFailed] = useState(false);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(!animate);
 
   // The map wires its events once, so the latest props live in refs, synced
   // after every render and before the selection effect below runs.
@@ -151,7 +156,7 @@ export function DayMap({
   useEffect(() => {
     if (!points.length || !elRef.current) return;
     let cancelled = false;
-    const raf = requestAnimationFrame(() => setShown(true));
+    const raf = animate ? requestAnimationFrame(() => setShown(true)) : 0;
     const container = elRef.current;
     const markers = markersRef.current;
 

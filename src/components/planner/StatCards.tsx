@@ -68,13 +68,17 @@ function BigMoney({
 
 // One bar per day of the trip, drawn by hand. Columns, not a line: fourteen
 // discrete daily sums must not imply a continuous series. Axis free, label
-// free, all bars neutral except the single status bar.
+// free. One bar stands out: today carries the status accent when the trip is
+// underway; otherwise the heaviest day reads a step brighter in neutral ink,
+// emphasis by tone because status colour stays reserved for status.
 function DayBars({
   totals,
-  accentIndex,
+  emphasisIndex,
+  emphasisIsToday,
 }: {
   totals: number[];
-  accentIndex: number;
+  emphasisIndex: number;
+  emphasisIsToday: boolean;
 }) {
   const n = totals.length;
   if (n === 0) return null;
@@ -102,7 +106,13 @@ function DayBars({
             y={h - bh}
             width={unit - 1}
             height={bh}
-            fill={i === accentIndex ? "var(--accent)" : "var(--ink-4)"}
+            fill={
+              i === emphasisIndex
+                ? emphasisIsToday
+                  ? "var(--accent)"
+                  : "var(--ink-1)"
+                : "var(--ink-4)"
+            }
           />
         );
       })}
@@ -117,7 +127,8 @@ export function StatCards({
   overLimit,
   dailyAverage,
   dayTotals,
-  accentDayIndex,
+  emphasisDayIndex,
+  emphasisIsToday,
   currency,
   taste,
   weather,
@@ -129,7 +140,8 @@ export function StatCards({
   overLimit: boolean;
   dailyAverage: number;
   dayTotals: number[];
-  accentDayIndex: number;
+  emphasisDayIndex: number;
+  emphasisIsToday: boolean;
   currency: string;
   taste: string[];
   weather: WeatherSnapshot | null;
@@ -200,7 +212,11 @@ export function StatCards({
           Daily average
         </CardLabel>
         <BigMoney value={dailyAverage} currency={currency} />
-        <DayBars totals={dayTotals} accentIndex={accentDayIndex} />
+        <DayBars
+          totals={dayTotals}
+          emphasisIndex={emphasisDayIndex}
+          emphasisIsToday={emphasisIsToday}
+        />
         <div className="mt-1.5 num text-xs ink-3">
           per day over {dayTotals.length} days
         </div>

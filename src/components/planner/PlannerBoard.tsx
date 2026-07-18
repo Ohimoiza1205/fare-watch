@@ -112,12 +112,13 @@ export function PlannerBoard({
     .filter((it) => it.isEstimated)
     .reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0);
 
-  // Today's bar and weather when the trip is underway; otherwise the heaviest
-  // day carries the accent and the first day carries the forecast.
+  // Today's bar carries the status accent when the trip is underway; otherwise
+  // the heaviest day is emphasised in brighter neutral ink and the first day
+  // carries the forecast. Status colour stays reserved for status.
   const today = new Date().toLocaleDateString("en-CA");
   const todayIndex = days.findIndex((d) => d.date === today);
   const underway = todayIndex >= 0;
-  const accentDayIndex = underway
+  const emphasisDayIndex = underway
     ? todayIndex
     : dayTotals.indexOf(Math.max(...dayTotals, 0));
   const weatherDay = underway ? days[todayIndex] : days[0];
@@ -254,7 +255,8 @@ export function PlannerBoard({
         overLimit={budget.overLimit}
         dailyAverage={dailyAverage}
         dayTotals={dayTotals}
-        accentDayIndex={accentDayIndex}
+        emphasisDayIndex={emphasisDayIndex}
+        emphasisIsToday={underway}
         currency={currency}
         taste={taste}
         weather={weatherDay?.weather ?? null}
@@ -318,6 +320,7 @@ export function PlannerBoard({
                 selectedId={selectedStopId}
                 onSelect={setSelectedStopId}
                 onShowInPlan={showInPlan}
+                animate={disclosureReady}
               />
             </div>
           </div>
