@@ -237,7 +237,7 @@ export default async function Home() {
         <div className="lg:col-span-2">
           <BestDealCard deal={deal} routesWatched={dash.routesWatched} />
         </div>
-        <NextTripCard trip={trip} />
+        <NextTripCard trip={trip} hasPastTrips={trips.length > 0} />
       </div>
 
       <RecentActivity events={events} />

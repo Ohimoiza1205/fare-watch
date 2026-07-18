@@ -292,7 +292,7 @@ export function DealsBoard({
           ))}
         </div>
         <span className="num text-xs" style={{ color: "var(--ink-3)" }}>
-          {visible.length} {visible.length === 1 ? "catch" : "catches"}
+          {visible.length} live
           {lastPollAt != null && (
             <> &middot; refreshed {relativeAge(now - new Date(lastPollAt).getTime())} ago</>
           )}

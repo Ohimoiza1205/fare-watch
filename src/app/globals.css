@@ -323,18 +323,21 @@ body {
   100% { transform: translate3d(0%, 3%, 0) scale(0.98); }
 }
 
-/* The assistant's typing indicator: three dots pulsing inside the motion
-   budget while a grounded reply is being prepared. */
+/* The assistant's typing indicator. Each dot's pulse occupies one d3 (460ms)
+   of the cycle, keeping the movement itself inside the motion budget; the
+   rest of the cycle is still. */
 @keyframes typing-pulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.9; }
+  0% { opacity: 0.25; }
+  17% { opacity: 0.9; }
+  33% { opacity: 0.25; }
+  100% { opacity: 0.25; }
 }
 .typing-dot {
   width: 5px;
   height: 5px;
   border-radius: var(--r-pill);
   background: var(--ink-2);
-  animation: typing-pulse 920ms var(--ease-inout) infinite;
+  animation: typing-pulse 1380ms var(--ease-inout) infinite;
 }
 
 /* A standby dot that breathes on a 4s cycle. */

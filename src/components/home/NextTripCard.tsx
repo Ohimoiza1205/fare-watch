@@ -24,7 +24,13 @@ function fmt(date: string): string {
   });
 }
 
-export function NextTripCard({ trip }: { trip: NextTripInfo | null }) {
+export function NextTripCard({
+  trip,
+  hasPastTrips = false,
+}: {
+  trip: NextTripInfo | null;
+  hasPastTrips?: boolean;
+}) {
   if (!trip) {
     return (
       <div
@@ -32,7 +38,7 @@ export function NextTripCard({ trip }: { trip: NextTripInfo | null }) {
         style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
       >
         <p className="text-sm" style={{ color: "var(--ink-2)" }}>
-          No trips yet.
+          {hasPastTrips ? "No upcoming trips." : "No trips yet."}
         </p>
         <Link
           href="/plan"

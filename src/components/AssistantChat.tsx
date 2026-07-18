@@ -11,8 +11,8 @@ import { PriceTag } from "@/components/planner/PriceTag";
 // back: the reply as plain text, one static past-tense line per completed tool
 // call, and, on the planner mount only, a staged swap proposal as an inline
 // card. Confirming the card posts the proposal back to the confirm endpoint;
-// the model is never in that loop. No streaming, no typing indicators. While a
-// reply is pending, a static "Working." line.
+// the model is never in that loop. No streaming; while a reply is pending, a
+// quiet three dot typing indicator.
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
 

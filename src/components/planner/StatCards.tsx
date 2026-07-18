@@ -80,14 +80,25 @@ function CardLabel({
 function BigMoney({
   value,
   currency,
-  tone = "var(--ink-0)",
+  tone,
+  estimated = false,
 }: {
   value: number;
   currency: string;
   tone?: string;
+  estimated?: boolean;
 }) {
+  // Estimate marking lives on the figure itself: tilde and dimmer ink. An
+  // explicit tone (the over-ceiling warn) still wins on colour; the tilde
+  // stays either way because basis is carried by form, not colour.
+  const color = tone ?? (estimated ? "var(--ink-1)" : "var(--ink-0)");
   return (
-    <div className="mt-1.5 num text-2xl leading-none" style={{ color: tone }}>
+    <div className="mt-1.5 num text-2xl leading-none" style={{ color }}>
+      {estimated && (
+        <span aria-hidden="true" className="mr-0.5 ink-3">
+          ~
+        </span>
+      )}
       <span className="mr-1 text-sm ink-3">{currency}</span>
       <PriceRoll value={value} />
     </div>
@@ -103,6 +114,7 @@ export function StatCards({
   dayTotals,
   dayDates,
   currency,
+  hasEstimate,
   pace,
   taste,
   weather,
@@ -116,6 +128,7 @@ export function StatCards({
   dayTotals: number[];
   dayDates: string[];
   currency: string;
+  hasEstimate: boolean;
   pace: string;
   taste: string[];
   weather: WeatherSnapshot | null;
@@ -156,7 +169,8 @@ export function StatCards({
             <BigMoney
               value={planned}
               currency={currency}
-              tone={overLimit ? "var(--warn)" : "var(--ink-0)"}
+              tone={overLimit ? "var(--warn)" : undefined}
+              estimated={hasEstimate}
             />
             {hasCeiling ? (
               <div className="mt-1 num text-xs ink-3">
@@ -196,7 +210,7 @@ export function StatCards({
         <CardLabel hue={194} icon={<path d="M5 20v-8M10 20V6M15 20v-10M20 20v-5" />}>
           Daily average
         </CardLabel>
-        <BigMoney value={dailyAverage} currency={currency} />
+        <BigMoney value={dailyAverage} currency={currency} estimated={hasEstimate} />
         {sparkPoints.length >= 2 && (
           <ScrubSparkline
             points={sparkPoints}

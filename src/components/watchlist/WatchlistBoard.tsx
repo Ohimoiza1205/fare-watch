@@ -239,12 +239,18 @@ export function WatchlistBoard({
 }) {
   const [adding, setAdding] = useState(false);
 
-  // The command palette routes to /watchlist#add; honour the anchor once.
+  // The command palette routes to /watchlist#add. Honour the anchor on mount
+  // and on hash change, so the action also works while already on this page.
   useEffect(() => {
-    if (window.location.hash === "#add") {
-      const raf = requestAnimationFrame(() => setAdding(true));
-      return () => cancelAnimationFrame(raf);
-    }
+    const openIfAnchored = () => {
+      if (window.location.hash === "#add") setAdding(true);
+    };
+    const raf = requestAnimationFrame(openIfAnchored);
+    window.addEventListener("hashchange", openIfAnchored);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("hashchange", openIfAnchored);
+    };
   }, []);
 
   return (

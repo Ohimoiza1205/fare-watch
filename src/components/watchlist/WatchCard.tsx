@@ -81,7 +81,7 @@ export function WatchCard({
               ) : (
                 <div>
                   <span className="num text-3xl" style={{ color: "var(--ink-4)" }}>
-                    &ndash;
+                    -
                   </span>
                   <span className="ml-2 text-xs" style={{ color: "var(--ink-3)" }}>
                     No reading yet

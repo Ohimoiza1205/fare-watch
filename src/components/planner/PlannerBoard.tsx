@@ -303,6 +303,7 @@ export function PlannerBoard({
         dayTotals={dayTotals}
         dayDates={days.map((d) => d.date)}
         currency={currency}
+        hasEstimate={budget.hasEstimate}
         pace={pace}
         taste={taste}
         weather={weatherDay?.weather ?? null}

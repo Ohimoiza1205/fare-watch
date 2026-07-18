@@ -58,7 +58,10 @@ export default async function DashboardLayout({
   const cadenceMs = pollCadenceMs();
 
   const city = trip ? (trip.destLabel ?? trip.destination).split(",")[0].trim() : null;
-  const tripLink = trip && city ? { label: `${city} itinerary`, href: `/plan/${trip.id}` } : null;
+  const tripLink =
+    trip && city
+      ? { label: `${city} itinerary`, href: `/plan/${trip.id}`, city }
+      : null;
 
   return (
     <div className="flex min-h-screen">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { WeatherSnapshot } from "@/lib/planner/types";
 import { useNow } from "@/lib/hooks";
+import { DestinationImage } from "@/components/DestinationImage";
 
 // The left rail. Dark in both themes for continuity, so it reads from the
 // root tokens and never from the planner scope. The wordmark and live poll
@@ -131,7 +132,7 @@ export function Sidebar({
   weather?: SidebarWeather | null;
   lastPollAt: string | null;
   cadenceMs: number | null;
-  tripLink: { label: string; href: string } | null;
+  tripLink: { label: string; href: string; city: string } | null;
 }) {
   const pathname = usePathname();
   const now = useNow(30_000);
@@ -232,7 +233,14 @@ export function Sidebar({
                             style={{ background: "var(--cool)" }}
                           />
                         )}
-                        {Icon && <Icon className="h-[18px] w-[18px]" />}
+                        {item.id === "trip" && tripLink ? (
+                          <DestinationImage
+                            place={tripLink.city}
+                            className="h-[18px] w-[26px] shrink-0 rounded"
+                          />
+                        ) : (
+                          Icon && <Icon className="h-[18px] w-[18px]" />
+                        )}
                         <span className="truncate">{item.label}</span>
                       </span>
                     </Link>
