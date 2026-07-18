@@ -66,6 +66,7 @@ export default async function TripPage({
         budgetCeiling={trip.budget_ceiling}
         taste={trip.taste}
         pace={trip.pace}
+        assistantOnline={Boolean(process.env.ANTHROPIC_API_KEY)}
       />
     </main>
   );

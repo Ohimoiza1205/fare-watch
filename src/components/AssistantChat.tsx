@@ -253,7 +253,7 @@ export function AssistantChat({
           {entries.map((e, i) => {
             if (e.kind === "tool" || e.kind === "note") {
               return (
-                <div key={i} className="text-[0.6875rem] ink-3">
+                <div key={i} className="num text-[0.6875rem] ink-3">
                   {e.text}
                 </div>
               );
@@ -283,7 +283,16 @@ export function AssistantChat({
               </div>
             );
           })}
-          {busy && <div className="text-[0.6875rem] ink-3">Working.</div>}
+          {busy && (
+            <div
+              className="flex items-center gap-1.5 text-[0.6875rem] ink-3"
+              aria-label="Working"
+            >
+              <span className="typing-dot" />
+              <span className="typing-dot" style={{ animationDelay: "150ms" }} />
+              <span className="typing-dot" style={{ animationDelay: "300ms" }} />
+            </div>
+          )}
         </div>
       )}
 

@@ -46,6 +46,7 @@ export function PlannerBoard({
   budgetCeiling,
   taste,
   pace,
+  assistantOnline,
 }: {
   tripId: string;
   days: ComposedDay[];
@@ -54,6 +55,7 @@ export function PlannerBoard({
   budgetCeiling: number | null;
   taste: string[];
   pace: string;
+  assistantOnline: boolean;
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
@@ -433,7 +435,11 @@ export function PlannerBoard({
       </div>
 
       <div className="mt-6">
-        <AssistantPanel tripId={tripId} onItemReplaced={replaceItem} />
+        <AssistantPanel
+          tripId={tripId}
+          online={assistantOnline}
+          onItemReplaced={replaceItem}
+        />
       </div>
     </div>
   );
