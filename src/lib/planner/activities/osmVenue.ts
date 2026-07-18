@@ -45,7 +45,11 @@ export const osmVenue: ActivityProvider = {
 
     if (!nearest) return null;
 
-    const { price, priceMax } = estimateParty(category.id, q.travellers);
+    const { price, priceMax } = estimateParty(
+      category.id,
+      q.travellers,
+      q.currency
+    );
     return {
       category: category.id,
       title: category.label,

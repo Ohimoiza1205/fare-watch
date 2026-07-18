@@ -1,8 +1,9 @@
 import { createServiceClient } from "@/lib/db/client";
 
 // There is no auth yet, so this page states that fact and nothing more. The
-// default currency is inferred from the watches because it is the only
-// account-shaped fact the data actually holds.
+// watch currency is inferred from the watches because it is the only
+// account-shaped fact the data actually holds; trip currency is a property of
+// each trip's destination, not of the account.
 export const dynamic = "force-dynamic";
 
 async function defaultCurrency(): Promise<string | null> {
@@ -32,9 +33,13 @@ export default async function Profile() {
         </p>
         {currency && (
           <p className="mt-4 text-sm ink-3">
-            Default currency <span className="num ink-1">{currency}</span>
+            Watch currency <span className="num ink-1">{currency}</span>
           </p>
         )}
+        <p className="mt-2 text-sm leading-relaxed ink-3">
+          Trip prices follow the destination&#39;s currency; estimates are
+          converted approximately.
+        </p>
       </div>
     </main>
   );

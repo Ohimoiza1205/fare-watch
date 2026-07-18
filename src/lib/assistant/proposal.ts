@@ -237,7 +237,11 @@ export async function applyProposal(
   // Prices are never taken from the wire: the party estimate is re-derived
   // from the option's category and the trip's travellers, the same maths the
   // lookup used to produce it.
-  const { price, priceMax } = estimateParty(option.category, ctx.trip.travellers);
+  const { price, priceMax } = estimateParty(
+    option.category,
+    ctx.trip.travellers,
+    ctx.trip.currency
+  );
 
   const row = await updateItem(db, proposal.itemId, {
     category: option.category,
