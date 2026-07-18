@@ -11,6 +11,8 @@ import { BudgetDonut } from "./BudgetDonut";
 import { BudgetBreakdown } from "./BudgetBreakdown";
 import { DayMap, type MapStop } from "./DayMap";
 import { TripCalendar } from "./TripCalendar";
+import { HeatCalendar } from "@/components/HeatCalendar";
+import { formatMoney } from "@/lib/planner/format";
 import { AssistantPanel } from "./AssistantPanel";
 import { TripSummaryStrip } from "./TripSummaryStrip";
 import { categoryMarkerColor } from "@/lib/planner/categoryColor";
@@ -376,6 +378,7 @@ export function PlannerBoard({
             planned={budget.average}
             ceiling={budget.limit}
             overLimit={budget.overLimit}
+            hasEstimate={budget.hasEstimate}
             emphasis={hoverCategory}
           />
 
@@ -399,22 +402,38 @@ export function PlannerBoard({
               />
             </div>
           </div>
+
+          <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
+            <h3 className="eyebrow">Spend by day</h3>
+            <HeatCalendar
+              days={days.map((d, i) => ({
+                date: d.date,
+                total: dayTotals[i],
+                estimated: d.items.some((it) => it.isEstimated),
+              }))}
+              formatTotal={(v) => formatMoney(v, currency)}
+              className="mt-3"
+            />
+          </div>
+
+          <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
+            <h3 className="eyebrow">Trip summary</h3>
+            <div className="mt-3">
+              <TripSummaryStrip
+                durationDays={days.length}
+                activityCount={activityCount}
+                estimatedTotal={budget.average}
+                dailyAverage={dailyAverage}
+                currency={currency}
+                hasEstimate={budget.hasEstimate}
+              />
+            </div>
+          </div>
         </aside>
       </div>
 
       <div className="mt-6">
         <AssistantPanel tripId={tripId} onItemReplaced={replaceItem} />
-      </div>
-
-      <div className="mt-6">
-        <TripSummaryStrip
-          durationDays={days.length}
-          activityCount={activityCount}
-          estimatedTotal={budget.average}
-          dailyAverage={dailyAverage}
-          currency={currency}
-          hasEstimate={budget.hasEstimate}
-        />
       </div>
     </div>
   );

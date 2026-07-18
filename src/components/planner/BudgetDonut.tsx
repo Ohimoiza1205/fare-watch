@@ -28,6 +28,7 @@ export function BudgetDonut({
   planned,
   ceiling,
   overLimit,
+  hasEstimate = false,
   emphasis = null,
 }: {
   items: BreakdownItem[];
@@ -35,6 +36,7 @@ export function BudgetDonut({
   planned: number;
   ceiling: number | null;
   overLimit: boolean;
+  hasEstimate?: boolean;
   emphasis?: string | null;
 }) {
   const { rows, total } = useMemo(() => categoryBreakdown(items), [items]);
@@ -119,28 +121,26 @@ export function BudgetDonut({
               </g>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {hasCeiling ? (
-                <>
-                  <span
-                    className="num text-2xl leading-none"
-                    style={{ color: overLimit ? "var(--warn)" : "var(--ink-0)" }}
-                  >
-                    <PriceRoll value={pct} />
-                    <span className="text-sm ink-3">%</span>
+              {/* the spent total, carried in the same estimate form as every
+                  other money figure; percent of ceiling lives in the stat
+                  card's gauge */}
+              <span
+                className={`num text-xl leading-none ${hasEstimate ? "ink-2" : "ink-0"}`}
+                style={overLimit ? { color: "var(--warn)" } : undefined}
+              >
+                {hasEstimate && (
+                  <span aria-hidden="true" className="mr-0.5 ink-3">
+                    ~
                   </span>
-                  <span className="mt-1 num text-[0.625rem] ink-3">
-                    of {formatMoney(ceiling as number, currency)}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="num text-xl leading-none ink-0">
-                    <span className="mr-1 text-sm ink-3">{currency}</span>
-                    <PriceRoll value={planned} />
-                  </span>
-                  <span className="mt-1 text-[0.625rem] ink-3">planned</span>
-                </>
-              )}
+                )}
+                <span className="mr-1 text-sm ink-3">{currency}</span>
+                <PriceRoll value={planned} />
+              </span>
+              <span className="mt-1 num text-[0.625rem] ink-3">
+                {hasCeiling
+                  ? `of ${formatMoney(ceiling as number, currency)} (${Math.round(pct)}%)`
+                  : "planned"}
+              </span>
             </div>
           </div>
         </div>

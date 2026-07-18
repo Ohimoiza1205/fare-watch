@@ -86,8 +86,8 @@ function ProposalCard({
 
   return (
     <div
-      className="rounded-lg border p-3"
-      style={{ borderColor: "var(--hairline-strong)" }}
+      className="rounded-xl border p-3 surface-2"
+      style={{ borderColor: "var(--hairline)", boxShadow: "var(--elev-raise)" }}
     >
       <p className="text-xs ink-1">
         Replaces {proposal.before.venue}, day {proposal.dayIndex + 1}. Nothing
