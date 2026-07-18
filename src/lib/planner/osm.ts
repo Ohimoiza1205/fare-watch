@@ -22,7 +22,7 @@ export async function overpassQuery(query: string): Promise<OverpassElement[]> {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "FareWatch/1.0 (personal trip planner)",
+      "User-Agent": USER_AGENT,
     },
     body: `data=${encodeURIComponent(query)}`,
     cache: "no-store",
