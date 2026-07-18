@@ -168,12 +168,14 @@ export function AssistantChat({
   inputId,
   confirmEndpoint,
   onItemReplaced,
+  suggestions,
 }: {
   endpoint: string;
   emptyText: string;
   inputId?: string;
   confirmEndpoint?: string;
   onItemReplaced?: (item: ComposedItem) => void;
+  suggestions?: string[];
 }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [input, setInput] = useState("");
@@ -191,8 +193,8 @@ export function AssistantChat({
     });
   }
 
-  async function send() {
-    const text = input.trim();
+  async function send(preset?: string) {
+    const text = (preset ?? input).trim();
     if (!text || busy) return;
     const turns: ChatTurn[] = [...toTurns(entries), { role: "user", content: text }];
     setEntries((e) => [...e, { kind: "user", text }]);
@@ -282,6 +284,25 @@ export function AssistantChat({
             );
           })}
           {busy && <div className="text-[0.6875rem] ink-3">Working.</div>}
+        </div>
+      )}
+
+      {suggestions && suggestions.length > 0 && entries.length === 0 && !busy && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => void send(s)}
+              className="pressable rounded-full px-3 py-1.5 text-[0.6875rem]"
+              style={{
+                border: "1px solid var(--hairline-strong)",
+                color: "var(--ink-2)",
+              }}
+            >
+              {s}
+            </button>
+          ))}
         </div>
       )}
 

@@ -1,72 +1,81 @@
-import { getDashboard } from "@/lib/db/queries";
-import { RouteRow } from "@/components/RouteRow";
-import { ROW_GRID } from "@/components/rowGrid";
-import { AssistantChat } from "@/components/AssistantChat";
+import { getDashboard, type RouteSummary } from "@/lib/db/queries";
+import { pollCadenceMs } from "@/lib/cron";
+import {
+  WatchlistBoard,
+} from "@/components/watchlist/WatchlistBoard";
+import type { WatchCardExtras } from "@/components/watchlist/WatchCard";
 
-// The list reflects the latest poll, so read fresh on every request.
+// The list reflects the latest poll, so read fresh on every request. All the
+// derived figures (status, trend, percentile position) are computed here from
+// the stored series and handed to the cards as plain data.
 export const dynamic = "force-dynamic";
 
-function pollTime(iso: string | null) {
-  if (!iso) return "never";
-  const d = new Date(iso);
-  return d.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const DAY_MS = 24 * 3_600_000;
+
+function percentile(values: number[], p: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = Math.floor((p / 100) * (sorted.length - 1));
+  return sorted[idx];
 }
 
-function HeaderStat({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="flex flex-col gap-1">
-      <span className="eyebrow">{label}</span>
-      <span className="num text-sm ink-1">{value}</span>
-    </span>
-  );
+function extrasFor(s: RouteSummary, gapMs: number): WatchCardExtras {
+  const prices = s.series.map((p) => p.price);
+
+  let status: WatchCardExtras["status"] = "watching";
+  if (s.status === "below normal") status = "below";
+  else if (s.status === "normal") status = "normal";
+  if (
+    status === "normal" &&
+    s.current != null &&
+    prices.length >= 3 &&
+    s.current >= percentile(prices, 90)
+  ) {
+    status = "above";
+  }
+
+  // Trend from the last five stored observations, stated only with three or
+  // more; fewer points cannot support a direction word.
+  let trend: WatchCardExtras["trend"] = null;
+  const lastFive = s.series.slice(-5);
+  if (lastFive.length >= 3) {
+    const first = lastFive[0].price;
+    const last = lastFive[lastFive.length - 1].price;
+    if (last < first) trend = "falling";
+    else if (last > first) trend = "rising";
+  }
+
+  let cheapestPct: number | null = null;
+  if (s.current != null && prices.length >= 5) {
+    const atOrBelow = prices.filter((p) => p <= s.current!).length;
+    cheapestPct = Math.max(1, Math.round((atOrBelow / prices.length) * 100));
+  }
+
+  return { status, trend, cheapestPct, readings: prices.length, gapMs };
 }
 
-export default async function Dashboard() {
-  const { summaries, routesWatched, lastPollAt, alertsToday } = await getDashboard();
+export default async function WatchlistPage() {
+  const dash = await getDashboard();
+  const gapMs = (pollCadenceMs() ?? DAY_MS) * 2;
+
+  const extras: Record<string, WatchCardExtras> = {};
+  for (const s of dash.summaries) extras[s.watch.id] = extrasFor(s, gapMs);
+
+  const first = dash.summaries[0]?.watch;
+  const route = first ? `${first.origin} to ${first.destination}` : null;
+  const suggestions = [
+    ...(route
+      ? [`When was ${route} cheapest`, `Is ${route} below its normal range`]
+      : []),
+    "Compare my watched routes",
+    "What alerts fired in the last month",
+  ];
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-8 py-10">
-      {/* one quiet status line, set once, never animated */}
-      <div className="flex flex-wrap gap-x-10 gap-y-4">
-        <HeaderStat label="Routes watched" value={String(routesWatched)} />
-        <HeaderStat label="Last poll" value={pollTime(lastPollAt)} />
-        <HeaderStat label="Alerts today" value={String(alertsToday)} />
-      </div>
-
-      {summaries.length === 0 ? (
-        <p className="mt-16 text-sm ink-3">No routes watched. Add one to start.</p>
-      ) : (
-        <div className="mt-12">
-          <div className={`${ROW_GRID} px-3 pb-4`}>
-            <span className="eyebrow">Origin</span>
-            <span className="eyebrow">Dest</span>
-            <span className="eyebrow">Current</span>
-            <span className="eyebrow">Normal range</span>
-            <span className="eyebrow">Trend</span>
-            <span className="eyebrow">Status</span>
-          </div>
-
-          <div>
-            {summaries.map((s) => (
-              <RouteRow key={s.watch.id} summary={s} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* subordinate to the list; answers come only from stored tracker data */}
-      <section className="mt-16 max-w-2xl">
-        <h2 className="eyebrow">Assistant</h2>
-        <AssistantChat
-          endpoint="/api/assistant"
-          emptyText="Ask about watched routes, price history, or alerts. Figures come from stored data only."
-        />
-      </section>
-    </main>
+    <WatchlistBoard
+      summaries={dash.summaries}
+      extras={extras}
+      assistantOnline={Boolean(process.env.ANTHROPIC_API_KEY)}
+      suggestions={suggestions}
+    />
   );
 }

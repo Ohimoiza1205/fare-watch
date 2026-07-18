@@ -117,7 +117,13 @@ export function ScrubSparkline({
   }, [ping]);
 
   if (points.length < 2) {
-    return <svg width={width} height={height} aria-hidden="true" />;
+    return (
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ width: "100%", maxWidth: width, height: "auto", display: "block" }}
+        aria-hidden="true"
+      />
+    );
   }
 
   const minT = points[0].t;
@@ -179,8 +185,8 @@ export function ScrubSparkline({
     <div className={className}>
       <svg
         ref={svgRef}
-        width={width}
-        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        style={{ width: "100%", maxWidth: width, height: "auto", display: "block" }}
         aria-hidden="true"
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
