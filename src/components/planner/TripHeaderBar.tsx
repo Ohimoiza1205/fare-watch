@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { VenueImage } from "./VenueImage";
+import { DestinationImage } from "@/components/DestinationImage";
 
-// The bar above the plan. A back control, a small destination thumbnail, the
-// trip title as an editable field with the date, traveller, and budget chips
-// stacked under it, then a quiet share control and the primary action on the
-// right. The brief opens in place from the real trip facts.
+// The destination header band: a wide softly faded destination photo (the warm
+// tile always underneath, so never a broken image) blending down into the blue
+// canvas, with the itinerary eyebrow, the editable kinetic trip title, and the
+// real dates, length, and country on a soft white scrim. Edit trip opens the
+// brief in place; share and the assistant action keep their existing
+// behaviour. The dates chip keeps its picker with apply disabled, because a
+// silent desync would be worse than no edit.
 
 type Brief = {
   destination: string;
@@ -18,21 +21,8 @@ type Brief = {
   maximum: string | null;
 };
 
-// How long the copied note holds before the label reverts. A reading pause,
-// not a motion duration, so it does not come from the motion tokens.
 const LINK_COPIED_HOLD = 2000;
 
-function Chip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full px-2.5 py-1 text-xs ink-2 surface-1">
-      {children}
-    </span>
-  );
-}
-
-// The dates chip opens a small popover with the two native date fields. Apply
-// stays disabled: changing the range would desync the generated days, and the
-// re-flow that makes it safe is a later task. No silent partial updates.
 function DatesChip({
   dates,
   startDate,
@@ -148,7 +138,9 @@ function DatesChip({
 
 export function TripHeaderBar({
   defaultTitle,
-  destination,
+  city,
+  country,
+  lengthDays,
   dates,
   startDate,
   endDate,
@@ -158,7 +150,9 @@ export function TripHeaderBar({
   backHref = "/plan",
 }: {
   defaultTitle: string;
-  destination: string;
+  city: string;
+  country: string | null;
+  lengthDays: number;
   dates: string;
   startDate: string | null;
   endDate: string | null;
@@ -199,75 +193,108 @@ export function TripHeaderBar({
     el.focus({ preventScroll: true });
   }
 
+  const subLine = [dates, `${lengthDays} ${lengthDays === 1 ? "day" : "days"}`, country]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="mb-6">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <Link
-          href={backHref}
-          className="flex items-center gap-1.5 text-sm ink-2 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          Back
-        </Link>
-
-        {/* The destination stands in for a venue: no category of its own, so the
-            outdoors tile carries it, and the seam keeps it from ever being a
-            broken box. */}
-        <VenueImage
-          category="outdoors"
-          venueName={destination}
-          active
-          className="h-14 w-14 shrink-0 rounded-lg"
+      <div className="relative overflow-hidden rounded-[var(--r-card)]">
+        <div className="absolute inset-0">
+          <DestinationImage place={city} className="h-full w-full" />
+        </div>
+        {/* the photo fades down into the canvas so the band belongs to the page */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 35%, var(--bg) 100%)",
+          }}
         />
 
-        <div className="min-w-0 flex-1">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            aria-label="Trip title"
-            className="w-full border-b border-transparent bg-transparent pb-0.5 text-lg ink-0 outline-none transition-colors duration-[var(--d1)] focus:border-[var(--hairline-strong)]"
-          />
-
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <DatesChip dates={dates} startDate={startDate} endDate={endDate} />
-            <Chip>
-              <span className="num">{travellers}</span> travellers
-            </Chip>
-            {budget && (
-              <Chip>
-                Budget <span className="num">{budget}</span>
-              </Chip>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowBrief((v) => !v)}
-              aria-expanded={showBrief}
-              className="pressable rounded-full px-2.5 py-1 text-xs ink-2 surface-1 hover:text-[var(--ink-0)]"
+        <div className="relative flex min-h-44 flex-col justify-between p-4">
+          <div className="flex items-start justify-between gap-3">
+            <Link
+              href={backHref}
+              className="pressable flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs"
+              style={{
+                background: "rgba(255,255,255,0.75)",
+                color: "var(--ink-1)",
+                backdropFilter: "blur(6px)",
+              }}
             >
-              {showBrief ? "Hide trip brief" : "View trip brief"}
-            </button>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Back
+            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={share}
+                className="pressable rounded-full px-3 py-1.5 text-xs"
+                style={{
+                  background: "rgba(255,255,255,0.75)",
+                  color: "var(--ink-1)",
+                  backdropFilter: "blur(6px)",
+                }}
+              >
+                <span aria-live="polite">{shared ? "Link copied" : "Share trip"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBrief((v) => !v)}
+                aria-expanded={showBrief}
+                className="pressable rounded-full px-3 py-1.5 text-xs"
+                style={{
+                  background: "rgba(255,255,255,0.75)",
+                  color: "var(--ink-1)",
+                  backdropFilter: "blur(6px)",
+                }}
+              >
+                Edit trip
+              </button>
+              <button
+                type="button"
+                onClick={goToAssistant}
+                className="pressable rounded-full px-3 py-1.5 text-xs font-medium"
+                style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
+              >
+                Ask the assistant
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={share}
-            className="pressable rounded-md border px-3 py-1.5 text-sm ink-1 hover:text-[var(--ink-0)]"
-            style={{ borderColor: "var(--hairline-strong)" }}
+          <div
+            className="mt-6 w-fit max-w-full rounded-xl px-4 py-3"
+            style={{
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(8px)",
+            }}
           >
-            <span aria-live="polite">{shared ? "Link copied" : "Share trip"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={goToAssistant}
-            className="pressable rounded-md px-3 py-1.5 text-sm font-medium hover:opacity-90"
-            style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
-          >
-            Ask the assistant
-          </button>
+            <span className="eyebrow">Itinerary</span>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              aria-label="Trip title"
+              className="heading kinetic mt-0.5 w-full border-b border-transparent bg-transparent pb-0.5 text-2xl outline-none transition-colors duration-[var(--d1)] focus:border-[var(--hairline-strong)]"
+              style={{ color: "var(--ink-0)" }}
+            />
+            <div className="num mt-1 text-sm" style={{ color: "var(--ink-1)" }}>
+              {subLine}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <DatesChip dates={dates} startDate={startDate} endDate={endDate} />
+              <span className="rounded-full px-2.5 py-1 text-xs ink-2 surface-1">
+                <span className="num">{travellers}</span> travellers
+              </span>
+              {budget && (
+                <span className="rounded-full px-2.5 py-1 text-xs ink-2 surface-1">
+                  Budget <span className="num">{budget}</span>
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

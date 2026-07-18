@@ -8,6 +8,7 @@ import { categoryTags } from "@/lib/planner/schedule";
 import { categoryTagStyle } from "@/lib/planner/categoryColor";
 import { PriceTag } from "./PriceTag";
 import { VenueImage } from "./VenueImage";
+import { SpotlightCard } from "@/components/SpotlightCard";
 
 // One activity as a schedule row. The time and a numbered node sit in the left
 // rail, joined by a connector so a day reads top to bottom. The card lifts on
@@ -32,6 +33,7 @@ function Node({
   selected?: boolean;
   onSelect?: () => void;
 }) {
+  // A hollow ring node; filled only while its map pin is selected.
   const face = (
     <span
       className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem]"
@@ -39,9 +41,9 @@ function Node({
         selected
           ? { background: "var(--ink-1)", color: "var(--on-ink)" }
           : {
-              background: "var(--surface-2)",
+              background: "transparent",
               color: "var(--ink-2)",
-              boxShadow: "0 0 0 1px var(--hairline-strong)",
+              boxShadow: "inset 0 0 0 1.5px var(--ink-3)",
             }
       }
     >
@@ -294,8 +296,9 @@ export function ActivityRow({
       />
 
       <div className="pb-3">
+        <SpotlightCard className="rounded-xl">
         <div
-          className={`group/card relative flex w-full gap-2 rounded-xl p-2.5 surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)] ${
+          className={`group/card relative flex w-full gap-2 rounded-xl p-2.5 surface-2 shadow-[var(--elev-raise)] transition-[box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:shadow-[var(--elev-float)] ${
             highlighted ? "planner-locate" : ""
           }`}
           onAnimationEnd={(e) => {
@@ -323,12 +326,28 @@ export function ActivityRow({
                   {item.address}
                 </div>
               )}
-              <div className="mt-1.5 flex flex-wrap gap-1">
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 {categoryTags(item.category).map((t) => (
                   <Tag key={t} style={categoryTagStyle(item.category)}>
                     {t}
                   </Tag>
                 ))}
+                <span className="num flex items-center gap-1 text-[0.625rem] ink-3">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-2.5 w-2.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
+                  Stop {number}
+                </span>
               </div>
             </div>
 
@@ -424,6 +443,7 @@ export function ActivityRow({
             </div>
           </div>
         </div>
+        </SpotlightCard>
 
         <div
           className={`grid transition-[grid-template-rows] duration-[var(--d2)] ease-[var(--ease)] ${

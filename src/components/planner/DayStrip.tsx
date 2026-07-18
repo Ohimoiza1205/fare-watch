@@ -5,17 +5,14 @@ import type { ComposedDay } from "@/lib/planner/day";
 import { isWetWeather } from "@/lib/planner/weather";
 import { RhythmMark } from "./RhythmMark";
 
-// The whole trip in one horizontal run, a compact tile per day with its number,
-// date, weather, and rhythm. Tapping a tile selects that day and scrolls the
-// plan onto it. Rest days read by their ring, the same mark the plan uses.
+// The whole trip in one light glass bar: a pill per day carrying its number,
+// its date (the arranger gives days no area name, so the date is the honest
+// label), the rhythm mark, and the wet marker. The active pill reads dark.
+// Overflow scrolls; tapping selects the day and the plan follows.
 
-function parts(date: string) {
+function label(date: string) {
   const d = new Date(`${date}T12:00:00`);
-  return {
-    weekday: d.toLocaleDateString("en-GB", { weekday: "short" }),
-    dom: d.toLocaleDateString("en-GB", { day: "2-digit" }),
-    mon: d.toLocaleDateString("en-GB", { month: "short" }),
-  };
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 export function DayStrip({
@@ -43,15 +40,13 @@ export function DayStrip({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto pb-2"
+      className="glass flex gap-1.5 overflow-x-auto rounded-[var(--r-card)] p-1.5"
       role="tablist"
       aria-label="Days"
     >
       {days.map((day) => {
-        const p = parts(day.date);
         const wet = isWetWeather(day.weather);
         const isSelected = selected === day.dayIndex;
-        const temp = day.weather?.tempMax;
 
         return (
           <button
@@ -63,37 +58,25 @@ export function DayStrip({
             role="tab"
             aria-selected={isSelected}
             onClick={() => onSelect(day.dayIndex)}
-            className={`pressable w-[4.75rem] shrink-0 rounded-lg px-2.5 py-2 text-left ${
+            className="pressable flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5"
+            style={
               isSelected
-                ? "surface-2 -translate-y-0.5 shadow-[var(--elev-raise)]"
-                : "surface-1 hover:-translate-y-0.5"
-            }`}
-            style={{
-              boxShadow: isSelected ? undefined : "0 0 0 1px var(--hairline)",
-            }}
+                ? { background: "var(--ink-0)", color: "var(--on-ink)" }
+                : { color: "var(--ink-2)" }
+            }
           >
-            <div className="flex items-center justify-between">
-              <span className="num text-[0.625rem] ink-3">
-                {String(day.dayIndex + 1).padStart(2, "0")}
+            <span className="num text-xs font-medium">D{day.dayIndex + 1}</span>
+            <span className="num text-xs">{label(day.date)}</span>
+            <RhythmMark rhythm={day.rhythm} />
+            {wet && (
+              <span
+                aria-hidden="true"
+                className="text-[0.625rem]"
+                style={{ color: isSelected ? "var(--on-ink)" : "var(--ink-3)" }}
+              >
+                wet
               </span>
-              <RhythmMark rhythm={day.rhythm} />
-            </div>
-            <div className="mt-1.5 text-[0.625rem] uppercase tracking-wide ink-3">
-              {p.weekday}
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="num text-base ink-0">{p.dom}</span>
-              <span className="text-[0.625rem] ink-3">{p.mon}</span>
-            </div>
-            <div className="mt-1 flex items-center gap-1 text-[0.625rem] ink-2">
-              <span className="num">{temp != null ? `${Math.round(temp)}°` : "--"}</span>
-              {wet && (
-                <span aria-hidden="true" className="ink-3">
-                  wet
-                </span>
-              )}
-              {day.rhythm === "rest" && <span className="ink-3">rest</span>}
-            </div>
+            )}
           </button>
         );
       })}

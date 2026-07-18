@@ -239,19 +239,24 @@ export function ItineraryDay({
           </span>
           <span>
             <span className="eyebrow block">Day {day.dayIndex + 1}</span>
-            <span className="mt-1 block num text-lg ink-0">
+            <span className="mt-1 block heading text-lg ink-0">
               {formatDayDate(day.date)}
             </span>
-            {!expanded && (
-              <span className="mt-0.5 block text-xs ink-3">
-                {count} {count === 1 ? "activity" : "activities"}
-              </span>
-            )}
+            <span className="mt-0.5 block text-xs ink-3">
+              {count} {count === 1 ? "stop" : "stops"}
+            </span>
           </span>
         </span>
         <span className="text-right">
           <span className="eyebrow block">Day total</span>
-          <span className="mt-1 block num text-lg ink-0">
+          <span
+            className={`mt-1 block num text-lg ${total.hasEstimate ? "ink-2" : "ink-0"}`}
+          >
+            {total.hasEstimate && (
+              <span aria-hidden="true" className="mr-0.5 ink-3">
+                ~
+              </span>
+            )}
             <span className="mr-1 text-sm ink-3">{day.currency}</span>
             <PriceRoll value={total.average} />
           </span>

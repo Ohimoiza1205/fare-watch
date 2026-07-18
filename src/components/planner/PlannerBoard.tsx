@@ -43,6 +43,7 @@ export function PlannerBoard({
   currency,
   budgetCeiling,
   taste,
+  pace,
 }: {
   tripId: string;
   days: ComposedDay[];
@@ -50,6 +51,7 @@ export function PlannerBoard({
   currency: string;
   budgetCeiling: number | null;
   taste: string[];
+  pace: string;
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
@@ -124,16 +126,9 @@ export function PlannerBoard({
     .filter((it) => it.isEstimated)
     .reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0);
 
-  // Today's bar carries the status accent when the trip is underway; otherwise
-  // the heaviest day is emphasised in brighter neutral ink and the first day
-  // carries the forecast. Status colour stays reserved for status.
-  const today = new Date().toLocaleDateString("en-CA");
-  const todayIndex = days.findIndex((d) => d.date === today);
-  const underway = todayIndex >= 0;
-  const emphasisDayIndex = underway
-    ? todayIndex
-    : dayTotals.indexOf(Math.max(...dayTotals, 0));
-  const weatherDay = underway ? days[todayIndex] : days[0];
+  // The weather card follows the selected day, so picking a day moves the
+  // stats, the map, and the plan together.
+  const weatherDay = days[selected] ?? days[0];
 
   const tripBreakdown: BreakdownItem[] = days.flatMap((d) =>
     d.items.map((it) => ({
@@ -290,9 +285,9 @@ export function PlannerBoard({
         overLimit={budget.overLimit}
         dailyAverage={dailyAverage}
         dayTotals={dayTotals}
-        emphasisDayIndex={emphasisDayIndex}
-        emphasisIsToday={underway}
+        dayDates={days.map((d) => d.date)}
         currency={currency}
+        pace={pace}
         taste={taste}
         weather={weatherDay?.weather ?? null}
         weatherDate={weatherDay ? formatDayDate(weatherDay.date) : ""}

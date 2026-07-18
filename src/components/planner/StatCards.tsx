@@ -1,21 +1,49 @@
 "use client";
 
 import type { WeatherSnapshot } from "@/lib/planner/types";
+import { isWetWeather } from "@/lib/planner/weather";
 import { PriceRoll } from "@/components/PriceRoll";
+import { GaugeDial } from "@/components/GaugeDial";
+import { ScrubSparkline } from "@/components/ScrubSparkline";
 import { formatMoney } from "@/lib/planner/format";
-import { hueBadgeStyle } from "@/lib/planner/categoryColor";
+import { categoryTagStyle, hueBadgeStyle } from "@/lib/planner/categoryColor";
 
-// The top row of the dashboard. Compact cards on the cool canvas, numbers
-// prominent in tabular figures, rolling to their new value when the plan
-// changes. Each card carries one small tinted glyph beside its label, the same
-// line weight as the sidebar glyphs. Colour is spent only on status: the warn
-// fill when the plan is over its ceiling, the accent on the one bar that means
-// today or the heaviest day.
+// Four white cards. Numbers prominent in tabular figures, rolling on real
+// change. The gauge states percent of ceiling; the on-track line is green and
+// flips to the reserved status colour only when the plan is over its own
+// ceiling. Estimates keep the tilde and dim treatment on the figure itself.
 
-function Card({ children }: { children: React.ReactNode }) {
+const TASTE_CATEGORY: Record<string, string> = {
+  foodie: "dining",
+  outdoors: "outdoors",
+  nightlife: "nightlife",
+  culture: "museum",
+  cheap: "groceries",
+  treat: "shopping",
+};
+
+function Card({
+  children,
+  haze,
+}: {
+  children: React.ReactNode;
+  haze?: "warm" | "cool" | null;
+}) {
   return (
-    <div className="surface-2 rounded-xl px-4 py-3.5 shadow-[var(--elev-raise)]">
-      {children}
+    <div className="relative overflow-hidden rounded-xl surface-2 px-4 py-3.5 shadow-[var(--elev-raise)]">
+      {haze && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              haze === "warm"
+                ? "radial-gradient(120% 90% at 85% 0%, rgba(232, 150, 58, 0.14), transparent 60%)"
+                : "radial-gradient(120% 90% at 85% 0%, rgba(58, 159, 217, 0.14), transparent 60%)",
+          }}
+        />
+      )}
+      <div className="relative">{children}</div>
     </div>
   );
 }
@@ -66,60 +94,6 @@ function BigMoney({
   );
 }
 
-// One bar per day of the trip, drawn by hand. Columns, not a line: fourteen
-// discrete daily sums must not imply a continuous series. Axis free, label
-// free. One bar stands out: today carries the status accent when the trip is
-// underway; otherwise the heaviest day reads a step brighter in neutral ink,
-// emphasis by tone because status colour stays reserved for status.
-function DayBars({
-  totals,
-  emphasisIndex,
-  emphasisIsToday,
-}: {
-  totals: number[];
-  emphasisIndex: number;
-  emphasisIsToday: boolean;
-}) {
-  const n = totals.length;
-  if (n === 0) return null;
-  const unit = 5; // bar of 4 plus a gap of 1, in viewBox units
-  const w = n * unit - 1;
-  const h = 18;
-  const max = Math.max(...totals);
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      width="100%"
-      height={h}
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      className="mt-2 block"
-    >
-      {totals.map((v, i) => {
-        // a zero day keeps a faint stub so the trip length stays readable
-        const bh =
-          max > 0 ? Math.max((v / max) * (h - 2), v > 0 ? 1.5 : 0.75) : 0.75;
-        return (
-          <rect
-            key={i}
-            x={i * unit}
-            y={h - bh}
-            width={unit - 1}
-            height={bh}
-            fill={
-              i === emphasisIndex
-                ? emphasisIsToday
-                  ? "var(--accent)"
-                  : "var(--ink-1)"
-                : "var(--ink-4)"
-            }
-          />
-        );
-      })}
-    </svg>
-  );
-}
-
 export function StatCards({
   planned,
   ceiling,
@@ -127,9 +101,9 @@ export function StatCards({
   overLimit,
   dailyAverage,
   dayTotals,
-  emphasisDayIndex,
-  emphasisIsToday,
+  dayDates,
   currency,
+  pace,
   taste,
   weather,
   weatherDate,
@@ -140,28 +114,31 @@ export function StatCards({
   overLimit: boolean;
   dailyAverage: number;
   dayTotals: number[];
-  emphasisDayIndex: number;
-  emphasisIsToday: boolean;
+  dayDates: string[];
   currency: string;
+  pace: string;
   taste: string[];
   weather: WeatherSnapshot | null;
   weatherDate: string;
 }) {
   const hasCeiling = ceiling != null && ceiling > 0;
-  const pct = hasCeiling ? Math.round((planned / ceiling) * 100) : 0;
-  const remaining = hasCeiling ? ceiling - planned : 0;
-
-  const styleLabel =
-    taste.length > 0
-      ? taste.join(", ").charAt(0).toUpperCase() + taste.join(", ").slice(1)
-      : null;
+  const pctOfCeiling = hasCeiling ? planned / ceiling : 0;
 
   const estimatedForecast = weather?.estimated ?? false;
   const high = weather?.tempMax != null ? Math.round(weather.tempMax) : null;
   const low = weather?.tempMin != null ? Math.round(weather.tempMin) : null;
+  const wet = isWetWeather(weather);
+
+  const sparkPoints = dayTotals.map((v, i) => ({
+    t: new Date(`${dayDates[i]}T12:00:00`).getTime(),
+    v,
+  }));
+
+  const shownTastes = taste.slice(0, 2);
+  const overflow = taste.length - shownTastes.length;
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))]">
+    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <Card>
         <CardLabel
           hue={40}
@@ -174,37 +151,45 @@ export function StatCards({
         >
           Budget
         </CardLabel>
-        <BigMoney
-          value={planned}
-          currency={currency}
-          tone={overLimit ? "var(--warn)" : "var(--ink-0)"}
-        />
-        {hasCeiling ? (
-          <>
-            <div
-              className="mt-2 h-1 w-full overflow-hidden rounded-full"
-              style={{ background: "var(--hairline)" }}
-            >
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <BigMoney
+              value={planned}
+              currency={currency}
+              tone={overLimit ? "var(--warn)" : "var(--ink-0)"}
+            />
+            {hasCeiling ? (
+              <div className="mt-1 num text-xs ink-3">
+                / {formatMoney(ceiling, currency)}
+              </div>
+            ) : (
+              <div className="mt-1 text-xs ink-4">no ceiling set</div>
+            )}
+            {estimatedShare > 0 && (
+              <div className="mt-1 num text-xs ink-3">
+                ~{formatMoney(estimatedShare, currency)} of this is estimate
+              </div>
+            )}
+            {hasCeiling && (
               <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(100, pct)}%`,
-                  background: overLimit ? "var(--warn)" : "var(--ink-2)",
-                }}
-              />
-            </div>
-            <div className="mt-1.5 num text-xs ink-3">
-              of {formatMoney(ceiling, currency)} ({pct}% used)
-            </div>
-          </>
-        ) : (
-          <div className="mt-1.5 text-xs ink-4">no ceiling set</div>
-        )}
-        {estimatedShare > 0 && (
-          <div className="mt-1 num text-xs ink-3">
-            ~{formatMoney(estimatedShare, currency)} of this is estimate
+                className="mt-1 text-xs"
+                style={{ color: overLimit ? "var(--warn)" : "var(--ok)" }}
+              >
+                {overLimit
+                  ? `over the ceiling by ${formatMoney(planned - ceiling, currency)}`
+                  : "on track"}
+              </div>
+            )}
           </div>
-        )}
+          {hasCeiling && (
+            <GaugeDial
+              value={pctOfCeiling}
+              size={76}
+              color={overLimit ? "var(--warn)" : "var(--accent)"}
+              className="shrink-0"
+            />
+          )}
+        </div>
       </Card>
 
       <Card>
@@ -212,65 +197,60 @@ export function StatCards({
           Daily average
         </CardLabel>
         <BigMoney value={dailyAverage} currency={currency} />
-        <DayBars
-          totals={dayTotals}
-          emphasisIndex={emphasisDayIndex}
-          emphasisIsToday={emphasisIsToday}
-        />
+        {sparkPoints.length >= 2 && (
+          <ScrubSparkline
+            points={sparkPoints}
+            width={210}
+            height={36}
+            stroke="var(--accent)"
+            formatValue={(v) => formatMoney(v, currency)}
+            className="mt-2"
+          />
+        )}
         <div className="mt-1.5 num text-xs ink-3">
           per day over {dayTotals.length} days
         </div>
       </Card>
 
-      {hasCeiling && (
-        <Card>
-          <CardLabel
-            hue={214}
-            icon={
-              <>
-                <path d="M3 8a2 2 0 0 1 2-2h12M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2z" />
-                <path d="M16 13.5h2" />
-              </>
-            }
-          >
-            Remaining
-          </CardLabel>
-          <BigMoney
-            value={remaining}
-            currency={currency}
-            tone={remaining < 0 ? "var(--warn)" : "var(--ink-0)"}
-          />
-          <div className="mt-1.5 num text-xs ink-3">
-            of {formatMoney(ceiling, currency)}
-          </div>
-        </Card>
-      )}
-
-      {styleLabel && (
-        <Card>
-          <CardLabel
-            hue={288}
-            icon={
-              <>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M15 9l-2 5-4 2 2-5z" />
-              </>
-            }
-          >
-            Trip style
-          </CardLabel>
-          <div className="mt-2.5">
-            <span
-              className="inline-block rounded-full px-2.5 py-1 text-xs leading-none"
-              style={hueBadgeStyle(288)}
-            >
-              {styleLabel}
-            </span>
-          </div>
-        </Card>
-      )}
-
       <Card>
+        <CardLabel
+          hue={288}
+          icon={
+            <>
+              <circle cx="12" cy="12" r="9" />
+              <path d="M15 9l-2 5-4 2 2-5z" />
+            </>
+          }
+        >
+          Trip style
+        </CardLabel>
+        <div className="mt-1.5 text-2xl capitalize leading-none" style={{ color: "var(--ink-0)" }}>
+          {pace}
+        </div>
+        {taste.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {shownTastes.map((t) => (
+              <span
+                key={t}
+                className="rounded-full px-2 py-0.5 text-[0.6875rem] capitalize leading-none"
+                style={categoryTagStyle(TASTE_CATEGORY[t] ?? "errands")}
+              >
+                {t}
+              </span>
+            ))}
+            {overflow > 0 && (
+              <span
+                className="num rounded-full px-2 py-0.5 text-[0.6875rem] leading-none"
+                style={{ background: "var(--surface-1)", color: "var(--ink-3)" }}
+              >
+                +{overflow}
+              </span>
+            )}
+          </div>
+        )}
+      </Card>
+
+      <Card haze={weather && high != null ? (wet ? "cool" : "warm") : null}>
         <CardLabel
           hue={24}
           icon={

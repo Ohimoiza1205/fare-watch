@@ -29,7 +29,13 @@ export default async function TripPage({
     <main className="mx-auto w-full max-w-6xl px-6 py-6">
       <TripHeaderBar
         defaultTitle={`${days.length} days in ${short}`}
-        destination={destination}
+        city={short}
+        country={
+          destination.includes(",")
+            ? (destination.split(",").pop()?.trim() ?? null)
+            : null
+        }
+        lengthDays={days.length}
         dates={dates}
         startDate={trip.start_date}
         endDate={trip.end_date}
@@ -59,6 +65,7 @@ export default async function TripPage({
         currency={trip.currency}
         budgetCeiling={trip.budget_ceiling}
         taste={trip.taste}
+        pace={trip.pace}
       />
     </main>
   );
