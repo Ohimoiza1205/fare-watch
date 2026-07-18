@@ -1,83 +1,62 @@
-import { listAlerts, type AlertLogRow } from "@/lib/db/queries";
+import { getDashboard, listAlerts } from "@/lib/db/queries";
+import { pollCadenceMs } from "@/lib/cron";
+import { cityForIata } from "@/lib/airports";
+import { asReason, discountPct, midpointAt, seriesPoints } from "@/lib/dealMath";
+import { DealsBoard, type DealCardData } from "@/components/deals/DealsBoard";
 
-// A deal is the most recent alert per watch, so the page shows what is worth
-// acting on now, not the full history. The full log lives at /alerts.
+// Deals is the alert history made scannable: every card is a stored alert
+// joined to the observations around it. Discounts are computed against the
+// watch's own range at fire time or not shown at all.
 export const dynamic = "force-dynamic";
 
-const GRID =
-  "grid grid-cols-[3.25rem_3.25rem_9rem_6.5rem_9.5rem_auto] items-baseline gap-x-6";
+const DAY_MS = 24 * 3_600_000;
 
-function when(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function latestPerWatch(alerts: AlertLogRow[]): AlertLogRow[] {
-  const seen = new Set<string>();
-  const out: AlertLogRow[] = [];
+function buildDeals(
+  dash: Awaited<ReturnType<typeof getDashboard>>,
+  alerts: Awaited<ReturnType<typeof listAlerts>>,
+  gap: number
+): DealCardData[] {
+  const byWatch = new Map(dash.summaries.map((s) => [s.watch.id, s]));
+  const since = Date.now() - 90 * DAY_MS;
+  const deals: DealCardData[] = [];
   for (const a of alerts) {
-    if (seen.has(a.watchId)) continue;
-    seen.add(a.watchId);
-    out.push(a);
+    const reason = asReason(a.reason);
+    if (!reason) continue;
+    const summary = byWatch.get(a.watchId);
+    const midpoint = summary ? midpointAt(summary, a.sentAt) : null;
+    const pct = midpoint != null ? discountPct(a.price, midpoint) : null;
+    deals.push({
+      id: String(a.id),
+      origin: a.origin,
+      destination: a.destination,
+      originCity: cityForIata(a.origin),
+      destCity: cityForIata(a.destination),
+      carriers: a.carriers ?? [],
+      reason,
+      price: a.price,
+      currency: a.currency || summary?.watch.currency || "",
+      midpoint,
+      discountPct: pct != null && pct > 0 ? pct : null,
+      caughtAt: a.sentAt,
+      deepLink: a.deepLink,
+      series: summary ? seriesPoints(summary, since) : [],
+      gapMs: gap,
+    });
   }
-  return out;
+  return deals;
 }
 
-export default async function Deals() {
-  const deals = latestPerWatch(await listAlerts(200));
+export default async function DealsPage() {
+  const [dash, alerts] = await Promise.all([getDashboard(), listAlerts(200)]);
+  const cadence = pollCadenceMs();
+  const deals = buildDeals(dash, alerts, (cadence ?? DAY_MS) * 2);
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-8 py-10">
-      <h1 className="text-lg ink-0">Deals</h1>
-
-      {deals.length === 0 ? (
-        <p className="mt-8 text-sm ink-3">
-          No deals recorded. Alerts that fire will appear here.
-        </p>
-      ) : (
-        <div className="mt-8">
-          <div className={`${GRID} px-3 pb-3`}>
-            <span className="eyebrow">Origin</span>
-            <span className="eyebrow">Dest</span>
-            <span className="eyebrow">Price</span>
-            <span className="eyebrow">Reason</span>
-            <span className="eyebrow">When</span>
-            <span />
-          </div>
-          {deals.map((d) => (
-            <div
-              key={d.id}
-              className={`${GRID} border-t px-3 py-4`}
-              style={{ borderColor: "var(--hairline)" }}
-            >
-              <span className="num text-sm ink-1">{d.origin}</span>
-              <span className="num text-sm ink-3">{d.destination}</span>
-              <span className="num text-base ink-0">
-                <span className="mr-1 text-xs ink-3">{d.currency}</span>
-                {d.price.toLocaleString("en-GB")}
-              </span>
-              <span className="text-xs ink-2">{d.reason}</span>
-              <span className="num text-xs ink-3">{when(d.sentAt)}</span>
-              {d.deepLink ? (
-                <a
-                  href={d.deepLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="justify-self-end text-xs ink-2 underline underline-offset-4 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)]"
-                >
-                  Open booking
-                </a>
-              ) : (
-                <span className="justify-self-end text-xs ink-4">no link</span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
+    <DealsBoard
+      deals={deals}
+      routesWatched={dash.routesWatched}
+      lastPollAt={dash.lastPollAt}
+      cadenceMs={cadence}
+    />
   );
 }

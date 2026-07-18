@@ -1,4 +1,5 @@
 import { getDashboard, listAlerts, type AlertLogRow, type RouteSummary } from "@/lib/db/queries";
+import { asReason, discountPct, midpointAt, seriesPoints } from "@/lib/dealMath";
 import { createServiceClient } from "@/lib/db/client";
 import { listTrips, resolveOwnerUserId, type TripSummary } from "@/lib/planner/repo";
 import { pollCadenceMs } from "@/lib/cron";
@@ -22,30 +23,6 @@ const DAY_MS = 24 * 3_600_000;
 function gapMs(): number {
   const cadence = pollCadenceMs();
   return (cadence ?? DAY_MS) * 2;
-}
-
-type Reason = "mistake" | "threshold" | "percentile" | "drop";
-
-function asReason(reason: string): Reason | null {
-  return reason === "mistake" || reason === "threshold" || reason === "percentile" || reason === "drop"
-    ? reason
-    : null;
-}
-
-// The watch's normal range as it stood when the alert fired: min and max of
-// the stored series up to that moment. Needs a few points to mean anything.
-function midpointAt(summary: RouteSummary, atIso: string): number | null {
-  const at = new Date(atIso).getTime();
-  const prices = summary.series
-    .filter((p) => new Date(p.observed_at).getTime() <= at)
-    .map((p) => p.price);
-  if (prices.length < 3) return null;
-  const midpoint = (Math.min(...prices) + Math.max(...prices)) / 2;
-  return midpoint > 0 ? midpoint : null;
-}
-
-function discountPct(price: number, midpoint: number): number {
-  return (1 - price / midpoint) * 100;
 }
 
 function greetingNow(): string {
@@ -73,7 +50,6 @@ function bestDeal(
     if (pct <= 0) continue;
     if (best && pct <= best.discountPct) continue;
 
-    const since = Date.now() - 90 * DAY_MS;
     best = {
       origin: a.origin,
       destination: a.destination,
@@ -87,9 +63,7 @@ function bestDeal(
       discountPct: pct,
       caughtAt: a.sentAt,
       deepLink: a.deepLink,
-      series: summary.series
-        .filter((p) => new Date(p.observed_at).getTime() >= since)
-        .map((p) => ({ t: new Date(p.observed_at).getTime(), v: p.price })),
+      series: seriesPoints(summary, Date.now() - 90 * DAY_MS),
       gapMs: gap,
     };
   }
