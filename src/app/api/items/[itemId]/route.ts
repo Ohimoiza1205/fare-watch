@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/db/client";
-import { updateItem, deleteItem, getItem, composeItem } from "@/lib/planner/repo";
+import {
+  updateItem,
+  deleteItem,
+  getItem,
+  composeItem,
+  loadDayContext,
+} from "@/lib/planner/repo";
 import { PlannerError } from "@/lib/planner/intake";
 import type { AlternativeOption } from "@/lib/planner/alternatives";
 
@@ -72,6 +78,23 @@ export async function PATCH(
       );
     }
 
+    // One currency source of truth per trip. An option priced in another
+    // currency is refused plainly; it must never be relabelled into the
+    // trip's currency or silently summed under the wrong label.
+    const ctx = await loadDayContext(db, existing.day_id);
+    if (!ctx) {
+      return NextResponse.json({ error: "Day not found." }, { status: 404 });
+    }
+    const optionCurrency = str(body.currency);
+    if (optionCurrency && optionCurrency !== ctx.trip.currency) {
+      return NextResponse.json(
+        {
+          error: `The option is priced in ${optionCurrency}; this trip is priced in ${ctx.trip.currency}.`,
+        },
+        { status: 422 }
+      );
+    }
+
     const row = await updateItem(db, id, {
       category: str(body.category) ?? undefined,
       title: str(body.title) ?? venue,
@@ -81,7 +104,7 @@ export async function PATCH(
       lon: num(body.lon),
       price: num(body.price),
       price_max: num(body.priceMax),
-      currency: str(body.currency) ?? undefined,
+      currency: ctx.trip.currency,
       // alternatives are always real venues with a marked estimate
       is_estimated: body.isEstimated !== false,
       price_source: str(body.priceSource) ?? "estimate",

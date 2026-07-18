@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ComposedDay, ComposedItem } from "@/lib/planner/day";
-import { computeTripBudget, type Priced } from "@/lib/planner/budget";
+import {
+  computeTripBudget,
+  partitionByCurrency,
+  type Priced,
+} from "@/lib/planner/budget";
 import { formatDayDate } from "@/lib/planner/format";
 import { StatCards } from "./StatCards";
 import { DayStrip } from "./DayStrip";
@@ -114,20 +118,28 @@ export function PlannerBoard({
       price: it.price,
       priceMax: it.priceMax,
       isEstimated: it.isEstimated,
+      currency: it.currency,
     }))
   );
   const budget = computeTripBudget(priced, { currency, limit: budgetCeiling });
+  const foreignCount = partitionByCurrency(priced, currency).foreign;
   const dailyAverage = days.length ? budget.average / days.length : 0;
   const activityCount = days.reduce((sum, d) => sum + d.items.length, 0);
+
+  // Whether an item joins a sum is decided in one place: it is native to the
+  // trip's currency or it is out of the sums entirely.
+  const inSum = (it: ComposedItem) => it.currency === currency;
 
   // Per day sums, recomputed from items so a swap moves the bars too. The
   // estimate share keeps the trip total honest about how much is marked.
   const dayTotals = days.map((d) =>
-    d.items.reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0)
+    d.items
+      .filter(inSum)
+      .reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0)
   );
   const estimatedShare = days
     .flatMap((d) => d.items)
-    .filter((it) => it.isEstimated)
+    .filter((it) => it.isEstimated && inSum(it))
     .reduce((sum, it) => sum + (it.price ?? it.priceMax ?? 0), 0);
 
   // The weather card follows the selected day, so picking a day moves the
@@ -135,7 +147,7 @@ export function PlannerBoard({
   const weatherDay = days[selected] ?? days[0];
 
   const tripBreakdown: BreakdownItem[] = days.flatMap((d) =>
-    d.items.map((it) => ({
+    d.items.filter(inSum).map((it) => ({
       category: it.category,
       price: it.price,
       priceMax: it.priceMax,
@@ -144,7 +156,7 @@ export function PlannerBoard({
 
   const day = days[selected] ?? days[0];
 
-  const dayBreakdown: BreakdownItem[] = day.items.map((it) => ({
+  const dayBreakdown: BreakdownItem[] = day.items.filter(inSum).map((it) => ({
     category: it.category,
     price: it.price,
     priceMax: it.priceMax,
@@ -296,6 +308,13 @@ export function PlannerBoard({
         weather={weatherDay?.weather ?? null}
         weatherDate={weatherDay ? formatDayDate(weatherDay.date) : ""}
       />
+
+      {foreignCount > 0 && (
+        <p className="mt-2 text-xs ink-3">
+          {foreignCount} {foreignCount === 1 ? "item is" : "items are"} priced
+          in another currency and left out of the totals.
+        </p>
+      )}
 
       <div className="mt-4 flex gap-2" role="tablist" aria-label="Plan views">
         {VIEWS.map((v) => (

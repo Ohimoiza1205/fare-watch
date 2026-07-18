@@ -75,6 +75,18 @@ export async function POST(
     return NextResponse.json({ error: "Day not found." }, { status: 404 });
   }
 
+  // One currency source of truth per trip: an option priced in another
+  // currency is refused plainly rather than relabelled or mis-summed.
+  const optionCurrency = str(body.currency);
+  if (optionCurrency && optionCurrency !== ctx.trip.currency) {
+    return NextResponse.json(
+      {
+        error: `The option is priced in ${optionCurrency}; this trip is priced in ${ctx.trip.currency}.`,
+      },
+      { status: 422 }
+    );
+  }
+
   try {
     const row = await appendItem(db, dayId, {
       category,
@@ -85,7 +97,7 @@ export async function POST(
       lon: num(body.lon),
       price: num(body.price),
       price_max: num(body.priceMax),
-      currency: str(body.currency) ?? ctx.trip.currency,
+      currency: ctx.trip.currency,
       // added options are real venues with a marked estimate
       is_estimated: body.isEstimated !== false,
       price_source: str(body.priceSource) ?? "estimate",

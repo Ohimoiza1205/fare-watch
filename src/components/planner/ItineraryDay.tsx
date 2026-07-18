@@ -202,12 +202,17 @@ export function ItineraryDay({
   highlightId?: number | null;
   onHighlightEnd?: () => void;
 }) {
+  // The day total sums only figures priced in the day's own currency; an item
+  // priced in another currency shows its own label on its row and stays out
+  // of the sum.
   const total = rollup(
-    day.items.map((it) => ({
-      price: it.price,
-      priceMax: it.priceMax,
-      isEstimated: it.isEstimated,
-    }))
+    day.items
+      .filter((it) => it.currency === day.currency)
+      .map((it) => ({
+        price: it.price,
+        priceMax: it.priceMax,
+        isEstimated: it.isEstimated,
+      }))
   );
   const count = day.items.length;
 
