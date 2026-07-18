@@ -1,60 +1,67 @@
-import { listAlerts } from "@/lib/db/queries";
+import { getDashboard, listAlerts } from "@/lib/db/queries";
+import { asReason, midpointAt } from "@/lib/dealMath";
+import {
+  AlertsBoard,
+  type AlertDayGroup,
+  type AlertRowData,
+} from "@/components/alerts/AlertsBoard";
 
-// The audit trail of every alert sent, newest first. It records what already
-// happened, so there is nothing to mark read and nothing to act on here.
+// The full audit log, grouped by the local day each alert fired. Deltas are
+// against the watch's own range as it stood at fire time.
 export const dynamic = "force-dynamic";
 
-const GRID =
-  "grid grid-cols-[9.5rem_3.25rem_3.25rem_6.5rem_9rem_1fr] items-baseline gap-x-6";
+function dayKey(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-CA");
+}
 
-function when(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit",
+function dayLabel(key: string): string {
+  const today = new Date().toLocaleDateString("en-CA");
+  const yesterday = new Date(Date.now() - 24 * 3_600_000).toLocaleDateString("en-CA");
+  if (key === today) return "Today";
+  if (key === yesterday) return "Yesterday";
+  return new Date(`${key}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
-export default async function Alerts() {
-  const alerts = await listAlerts(500);
+async function buildGroups(): Promise<AlertDayGroup[]> {
+  const [dash, alerts] = await Promise.all([getDashboard(), listAlerts(500)]);
+  const byWatch = new Map(dash.summaries.map((s) => [s.watch.id, s]));
 
-  return (
-    <main className="mx-auto w-full max-w-4xl px-8 py-10">
-      <h1 className="text-lg ink-0">Alerts</h1>
+  const groups = new Map<string, AlertRowData[]>();
+  for (const a of alerts) {
+    const reason = asReason(a.reason);
+    if (!reason) continue;
+    const summary = byWatch.get(a.watchId);
+    const row: AlertRowData = {
+      id: String(a.id),
+      firedAt: a.sentAt,
+      channels: a.channels,
+      reason,
+      origin: a.origin,
+      destination: a.destination,
+      price: a.price,
+      currency: a.currency || summary?.watch.currency || "",
+      normal: summary ? midpointAt(summary, a.sentAt) : null,
+    };
+    const key = dayKey(a.sentAt);
+    const list = groups.get(key) ?? [];
+    list.push(row);
+    groups.set(key, list);
+  }
 
-      {alerts.length === 0 ? (
-        <p className="mt-8 text-sm ink-3">No alerts sent yet.</p>
-      ) : (
-        <div className="mt-8">
-          <div className={`${GRID} px-3 pb-3`}>
-            <span className="eyebrow">Sent</span>
-            <span className="eyebrow">Origin</span>
-            <span className="eyebrow">Dest</span>
-            <span className="eyebrow">Reason</span>
-            <span className="eyebrow">Price</span>
-            <span className="eyebrow">Channels</span>
-          </div>
-          {alerts.map((a) => (
-            <div
-              key={a.id}
-              className={`${GRID} border-t px-3 py-3`}
-              style={{ borderColor: "var(--hairline)" }}
-            >
-              <span className="num text-xs ink-3">{when(a.sentAt)}</span>
-              <span className="num text-sm ink-1">{a.origin}</span>
-              <span className="num text-sm ink-3">{a.destination}</span>
-              <span className="text-xs ink-2">{a.reason}</span>
-              <span className="num text-sm ink-0">
-                <span className="mr-1 text-xs ink-3">{a.currency}</span>
-                {a.price.toLocaleString("en-GB")}
-              </span>
-              <span className="text-xs ink-3">{a.channels.join(" ")}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
-  );
+  return [...groups.entries()]
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([key, rows]) => ({
+      label: dayLabel(key),
+      count: rows.length,
+      rows,
+    }));
+}
+
+export default async function AlertsPage() {
+  const groups = await buildGroups();
+  return <AlertsBoard groups={groups} fetchedAt={new Date().toISOString()} />;
 }
