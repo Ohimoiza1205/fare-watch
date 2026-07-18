@@ -104,6 +104,7 @@ Work top to bottom. Append new tasks at the bottom forever; never reorder or del
 - [ ] [proposed] P12. Days-to-departure chart toggle: re-plot stored observations against days until departure. Rationale: booking-window insight from existing rows, no ML.
 - [ ] [proposed] P13. Quiet hours with mistake override: hold threshold, percentile, and drop alerts overnight for morning delivery; mistake fares always break through. Rationale: fatigue control without missing the fares that die in minutes.
 - [ ] T12. Production readiness: clean prod build, vercel.json cron schedule, .env.example with every variable name, DEPLOY.md with the exact owner steps (Vercel connect, env paste, prod CRON_SECRET, deploy, domain purchase and DNS pointing), key rotation list.
+- [ ] T13. Intake form (/plan) to reference quality: bring the trip creation form onto the same bluish canvas and card system as the itinerary view, real input styling with depth, toggle groups that feel considered rather than default, consistent with DESIGN-STANDARD.md. No functional changes, appearance only.
 
 ## PART 6: DESIGN LEDGER (every accumulated decision, binding)
 
@@ -150,6 +151,9 @@ This is how the product keeps getting better without the build ever drifting: id
 - T4 done: five stat cards at parity (budget bar clamps at 100 percent with literal overage percent, column sparkline with single accent bar, remaining omitted without ceiling, style chip omitted when taste empty, weather with estimate dimming); daily totals recomputed from live item state; pass first cycle.
 - T3 done: header strip at reference parity (thumbnail via VenueImage seam, dates chip with native-input popover and honest disabled apply per P7, conditional budget chip, share secondary via navigator.share, primary action focuses the assistant); typecheck, lint, build pass first cycle.
 - T2 done: all seven nav items route to real pages (Home summary at /, tracker moved to /watchlist, new /deals, /alerts, /profile, /settings), sidebar weather card fed from next upcoming trip via cached Open-Meteo call, listAlerts query added; typecheck, lint, build pass first cycle.
+- Fix done: trip generation 406 root caused to Overpass rejecting requests without a User-Agent; shared USER_AGENT constant now identifies the app on Overpass, Open-Meteo geocode and weather, and Ticketmaster; verified against the live app path, discovery returned 71 real Lisbon venues with real addresses. Full save BLOCKED: the Supabase project host no longer resolves in public DNS (owner action in checklist).
+- Parity review (static, live page blocked by Supabase): 7 of 9 Part 2 items fully present; view switcher absent pending T10; rail dots neutral by the ledger colour rule. Flags to reconcile: script motion tokens 700/900/500ms sit outside the stated 200/320/460 budget, DayMap glides in on mount, and the heaviest-day bar in StatCards uses the status accent.
+- Responsiveness pass done: one pressable utility in globals.css, pressed state lands at once and releases over d1 with the weighted ease; applied to every action button, chip, tab, and menu item; row and day expanders excluded, their expansion already answers the press; reduced motion collapses it; typecheck, lint, build pass.
 
 ## MORNING CHECKLIST
 (Owner only actions the agent prepared but did not perform.)
@@ -157,3 +161,4 @@ This is how the product keeps getting better without the build ever drifting: id
 - Push the branch: `git push -u origin overnight/jul-17` hangs waiting for GitHub sign-in (HTTPS remote, credential manager has no stored credential). Run it once interactively, or type `! git push -u origin overnight/jul-17` in the Claude Code session; every commit is local until then.
 - Add ANTHROPIC_API_KEY to .env.local (and later Vercel) to bring the assistant out of its degraded state. Optionally set ANTHROPIC_MODEL; the code defaults to claude-haiku-4-5.
 - Rotate the RapidAPI key (CLAUDE.md section 12: the key used during de-risk runs was exposed in chat). Regenerate in RapidAPI, update .env.local and Vercel.
+- Restore the Supabase project: ctqujayrromwxwoxrynq.supabase.co no longer resolves in public DNS, which usually means the free tier project was paused for inactivity or deleted. Unpause it in the Supabase dashboard (or create a new project, re-run the schema from CLAUDE.md section 2, and update the three SUPABASE variables in .env.local and Vercel). Until then trips cannot save, the poller cannot record observations, and the T9 verification poll is blocked.
