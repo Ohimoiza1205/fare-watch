@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServiceClient } from "@/lib/db/client";
 import { resolveOwnerUserId, listTrips, type TripSummary } from "@/lib/planner/repo";
 import { TripIntakeForm } from "@/components/planner/TripIntakeForm";
+import { KineticHeading } from "@/components/KineticHeading";
 import { formatDayDate } from "@/lib/planner/format";
 
 // The list of a trip's own data changes as trips are generated, so read fresh.
@@ -41,21 +42,22 @@ export default async function PlannerHome() {
   const trips = await recentTrips();
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-8 py-12">
-      <h1 className="text-lg ink-0">Plan a trip</h1>
+    <main className="mx-auto w-full max-w-6xl px-6 py-8 lg:px-10">
+      <span className="eyebrow">Trip planner</span>
+      <KineticHeading className="mt-2 text-3xl">Plan a trip</KineticHeading>
       <p className="mt-2 max-w-md text-sm leading-relaxed ink-3">
         Real venues and real prices where they are found, clearly marked estimates
         where they are not.
       </p>
 
-      <div className="mt-12">
+      <div className="mt-8">
         <TripIntakeForm />
       </div>
 
       {trips.length > 0 && (
-        <section className="mt-20">
+        <section className="mt-14">
           <h2 className="eyebrow">Your trips</h2>
-          <div className="mt-5">
+          <div className="mt-4">
             {trips.map((t) => (
               <TripLine key={t.id} trip={t} />
             ))}
