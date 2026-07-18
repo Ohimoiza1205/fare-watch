@@ -10,6 +10,7 @@ import { ItineraryDay } from "./ItineraryDay";
 import { BudgetDonut } from "./BudgetDonut";
 import { BudgetBreakdown } from "./BudgetBreakdown";
 import { DayMap, type MapStop } from "./DayMap";
+import { TripCalendar } from "./TripCalendar";
 import { AssistantPanel } from "./AssistantPanel";
 import { TripSummaryStrip } from "./TripSummaryStrip";
 import { categoryMarkerColor } from "@/lib/planner/categoryColor";
@@ -17,6 +18,16 @@ import { categoryById } from "@/lib/planner/categories";
 import { scheduleTime } from "@/lib/planner/schedule";
 import { formatMoneyRange } from "@/lib/planner/format";
 import type { BreakdownItem } from "@/lib/planner/breakdown";
+
+// The itinerary area's views. Itinerary and Calendar are real; Map and
+// Timeline state plainly that they are not built yet rather than sitting dead.
+const VIEWS = [
+  { id: "itinerary", label: "Itinerary" },
+  { id: "calendar", label: "Calendar" },
+  { id: "map", label: "Map" },
+  { id: "timeline", label: "Timeline" },
+] as const;
+type PlannerView = (typeof VIEWS)[number]["id"];
 
 // The planner dashboard. Stats on top, the day strip as a selector, the days
 // stacked in the centre, and the right rail with the budget ring and the street
@@ -42,6 +53,7 @@ export function PlannerBoard({
 }) {
   const [days, setDays] = useState<ComposedDay[]>(initialDays);
   const [selected, setSelected] = useState(0);
+  const [view, setView] = useState<PlannerView>("itinerary");
 
   // One selected stop shared by the map and the rows; a hovered breakdown row
   // for the ring; a row briefly ringed after the map card's show in plan.
@@ -224,6 +236,29 @@ export function PlannerBoard({
     setSelectedStopId((cur) => (cur === itemId ? null : itemId));
   }
 
+  // A calendar cell returns to the itinerary aimed at its day. The sections do
+  // not exist until the view has switched, so the scroll waits two frames, the
+  // same settling the map card's action uses.
+  function pickDayFromCalendar(index: number) {
+    setView("itinerary");
+    setSelected(index);
+    setSelectedStopId(null);
+    const target = days[index];
+    if (target && collapsed[dayKey(target)]) toggleDay(dayKey(target));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const el = sectionRefs.current[index];
+        const reduce = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        el?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        });
+      })
+    );
+  }
+
   // The map card's one action: open the day section if it is closed, scroll to
   // the row, and ring it once. The ring clears itself when its animation ends.
   function showInPlan(itemId: number) {
@@ -263,35 +298,80 @@ export function PlannerBoard({
         weatherDate={weatherDay ? formatDayDate(weatherDay.date) : ""}
       />
 
-      <div className="mt-4">
-        <DayStrip days={days} selected={selected} onSelect={selectDay} />
+      <div className="mt-4 flex gap-2" role="tablist" aria-label="Plan views">
+        {VIEWS.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            role="tab"
+            aria-selected={view === v.id}
+            onClick={() => setView(v.id)}
+            className={`pressable rounded-lg px-3 py-1.5 text-sm ${
+              view === v.id
+                ? "surface-2 ink-0 shadow-[var(--elev-raise)]"
+                : "surface-1 ink-2 hover:text-[var(--ink-0)]"
+            }`}
+            style={{
+              boxShadow: view === v.id ? undefined : "0 0 0 1px var(--hairline)",
+            }}
+          >
+            {v.label}
+          </button>
+        ))}
       </div>
+
+      {view === "itinerary" && (
+        <div className="mt-4">
+          <DayStrip days={days} selected={selected} onSelect={selectDay} />
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-8">
-          {days.map((d, i) => (
-            <div
-              key={dayKey(d)}
-              ref={(el) => {
-                sectionRefs.current[i] = el;
-              }}
-            >
-              <ItineraryDay
-                day={d}
-                travellers={travellers}
-                expanded={!collapsed[dayKey(d)]}
-                animate={disclosureReady}
-                onToggle={() => toggleDay(dayKey(d))}
-                onReplace={replaceItem}
-                onRemove={removeItem}
-                onAdd={addItem}
-                selectedStopId={i === selected ? selectedStopId : null}
-                onSelectStop={(id) => selectStopFromRow(i, id)}
-                highlightId={highlightId}
-                onHighlightEnd={() => setHighlightId(null)}
-              />
-            </div>
-          ))}
+          {view === "itinerary" &&
+            days.map((d, i) => (
+              <div
+                key={dayKey(d)}
+                ref={(el) => {
+                  sectionRefs.current[i] = el;
+                }}
+              >
+                <ItineraryDay
+                  day={d}
+                  travellers={travellers}
+                  expanded={!collapsed[dayKey(d)]}
+                  animate={disclosureReady}
+                  onToggle={() => toggleDay(dayKey(d))}
+                  onReplace={replaceItem}
+                  onRemove={removeItem}
+                  onAdd={addItem}
+                  selectedStopId={i === selected ? selectedStopId : null}
+                  onSelectStop={(id) => selectStopFromRow(i, id)}
+                  highlightId={highlightId}
+                  onHighlightEnd={() => setHighlightId(null)}
+                />
+              </div>
+            ))}
+
+          {view === "calendar" && (
+            <TripCalendar
+              days={days}
+              dayTotals={dayTotals}
+              currency={currency}
+              onPickDay={pickDayFromCalendar}
+            />
+          )}
+
+          {view === "map" && (
+            <p className="text-sm ink-3">
+              Map view is not built yet. The selected day&#39;s street map stays
+              in the side panel.
+            </p>
+          )}
+
+          {view === "timeline" && (
+            <p className="text-sm ink-3">Timeline view is not built yet.</p>
+          )}
         </div>
 
         <aside className="space-y-4">
