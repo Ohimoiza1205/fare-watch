@@ -288,6 +288,14 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.65);
 }
 
+/* The spotlight hover reads white on the dark canvas, soft blue on the light. */
+.spotlight-card {
+  --spot-color: rgba(255, 255, 255, 0.06);
+}
+.theme-planner .spotlight-card {
+  --spot-color: rgba(58, 159, 217, 0.1);
+}
+
 /* Neumorphic pressed inset for active chips and segmented controls. */
 .pressed-in {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45),
