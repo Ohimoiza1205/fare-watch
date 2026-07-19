@@ -1,6 +1,6 @@
 // The trip's currency follows its destination country, so a price is always
 // shown in the money the traveller will actually spend. Covers the corridors
-// FareWatch tracks and the common cases; anything unmapped falls back to USD.
+// Farepoint tracks and the common cases; anything unmapped falls back to USD.
 
 const BY_COUNTRY: Record<string, string> = {
   US: "USD",

@@ -2,7 +2,22 @@ import { FareProvider, FareQuote, ProviderResult, WatchInput } from "./types";
 
 const HOST = process.env.RAPIDAPI_HOST ?? "flights-sky.p.rapidapi.com";
 
-function normalise(it: any, ccy: string): FareQuote {
+// The fields actually read off a raw topFlights/otherFlights item. The payload
+// carries more, but pinning only what we use keeps the surface honest.
+type RawFlight = {
+  price: number;
+  departureDate: string;
+  arrivalDate: string;
+  stops?: number;
+  segments?: unknown[];
+  airlineNames?: string[];
+  airlineCode?: string;
+  departureAirportCode: string;
+  arrivalAirportCode: string;
+  returningToken?: string;
+};
+
+function normalise(it: RawFlight, ccy: string): FareQuote {
   return {
     provider: "flights-sky",
     price: it.price,
@@ -21,14 +36,15 @@ function normalise(it: any, ccy: string): FareQuote {
 // The history point shape was never pinned down: the reference script only ever
 // read its price, never its time. Accept the tuple form and the field names the
 // provider is likely to use, and reject anything without both numbers.
-function parseHistoryPoint(h: any): { time: number; price: number } | null {
-  let time: any;
-  let price: any;
+function parseHistoryPoint(h: unknown): { time: number; price: number } | null {
+  let time: unknown;
+  let price: unknown;
   if (Array.isArray(h)) {
     [time, price] = h;
   } else if (h && typeof h === "object") {
-    time = h.time ?? h.timestamp ?? h.ts ?? h.date ?? h.day ?? h.t ?? h.x;
-    price = h.price ?? h.value ?? h.fare ?? h.amount ?? h.y;
+    const o = h as Record<string, unknown>;
+    time = o.time ?? o.timestamp ?? o.ts ?? o.date ?? o.day ?? o.t ?? o.x;
+    price = o.price ?? o.value ?? o.fare ?? o.amount ?? o.y;
   }
   const t = Number(time);
   const p = Number(price);
@@ -76,13 +92,13 @@ export const flightsSky: FareProvider = {
     const maxStopCount = input.maxStops === 0 ? Infinity : input.maxStops - 1;
 
     const quotes = items
-      .map((it: any) => normalise(it, input.currency))
+      .map((it: RawFlight) => normalise(it, input.currency))
       .filter((q: FareQuote) => q.price != null)
       .filter((q: FareQuote) => q.stops <= maxStopCount)
       .sort((a: FareQuote, b: FareQuote) => a.price - b.price);
 
     // History lives at data.priceHistory, sibling of topFlights and otherFlights.
-    const rawHistory: any[] = Array.isArray(data.priceHistory) ? data.priceHistory : [];
+    const rawHistory: unknown[] = Array.isArray(data.priceHistory) ? data.priceHistory : [];
     console.log(`flights-sky: raw priceHistory length ${rawHistory.length}`);
 
     // If points are present but not a top-level array, the length above reads 0

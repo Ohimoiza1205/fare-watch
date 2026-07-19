@@ -1,4 +1,5 @@
 import type { TasteTag } from "./intake";
+import { estimateInCurrency } from "./fx";
 
 // The curated master set of what a trip can hold. It is a backbone, not a menu:
 // generation surfaces only the categories a destination actually offers, found
@@ -15,7 +16,7 @@ export type Category = {
   kind: CategoryKind;
   indoor: boolean; // false means weather sensitive
   osm: string[]; // OpenStreetMap tag=value selectors that find the venue
-  baseline: [number, number]; // per person, low to high, estimates only
+  baseline: [number, number]; // per person in USD, low to high, estimates only
   taste: TasteTag[]; // tastes that lean toward this category
 };
 
@@ -83,17 +84,22 @@ export function categoryForTags(
 }
 
 // The party price for an estimate: the middle of the baseline range as the
-// representative figure, the top of it as the conservative ceiling. Real prices
-// never come through here.
+// representative figure, the top of it as the conservative ceiling, converted
+// from the USD baselines into the trip's own currency so the figure and its
+// label always agree. Real prices never come through here.
 export function estimateParty(
   id: string,
-  travellers: number
+  travellers: number,
+  currency: string
 ): { price: number; priceMax: number } {
   const c = BY_ID.get(id);
   const [lo, hi] = c?.baseline ?? [15, 35];
   const partyLo = lo * travellers;
   const partyHi = hi * travellers;
-  return { price: Math.round((partyLo + partyHi) / 2), priceMax: partyHi };
+  return {
+    price: estimateInCurrency((partyLo + partyHi) / 2, currency),
+    priceMax: estimateInCurrency(partyHi, currency),
+  };
 }
 
 function midBaseline(c: Category): number {

@@ -188,7 +188,7 @@ function estimatedItem(
   v: Venue,
   input: ArrangeInput
 ): ItemDraft {
-  const { price, priceMax } = estimateParty(cat, input.travellers);
+  const { price, priceMax } = estimateParty(cat, input.travellers, input.currency);
   return {
     category: cat,
     title,
@@ -301,7 +301,12 @@ export function arrangeTrip(input: ArrangeInput): PlannedDay[] {
 
     // A real event on this date takes the anchor and turns a rest day into a
     // light one, because a night out is not a rest day.
-    const events = input.eventsByDate.get(date) ?? [];
+    // A published price keeps the currency it was published in. One that does
+    // not match the trip's money cannot join the trip's sums, so it is left
+    // out rather than converted or relabeled.
+    const events = (input.eventsByDate.get(date) ?? []).filter(
+      (e) => e.currency === input.currency
+    );
     if (events.length) {
       const ev = events[0];
       if (r === "rest") r = "light";

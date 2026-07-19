@@ -17,10 +17,35 @@ export async function GET(req: NextRequest) {
     .select("*")
     .eq("active", true);
 
+  // Every watch polled costs one provider request against a 50-per-month cap,
+  // so a manual or verification run must be able to spend exactly one. ?watch=id
+  // targets a single watch; ?limit=n takes the n stalest (never-observed first,
+  // then oldest last observation). No parameter keeps the full cron behaviour.
+  let targets = watches ?? [];
+  const url = new URL(req.url);
+  const watchParam = url.searchParams.get("watch");
+  const limitParam = url.searchParams.get("limit");
+  if (watchParam) {
+    targets = targets.filter((w) => w.id === watchParam);
+  } else if (limitParam) {
+    const limit = Math.max(1, Number.parseInt(limitParam, 10) || 1);
+    const { data: seen } = await db
+      .from("observation")
+      .select("watch_id, observed_at")
+      .order("observed_at", { ascending: false });
+    const lastSeen = new Map<string, number>();
+    for (const o of seen ?? []) {
+      if (!lastSeen.has(o.watch_id)) lastSeen.set(o.watch_id, Date.parse(o.observed_at));
+    }
+    targets = [...targets]
+      .sort((a, b) => (lastSeen.get(a.id) ?? 0) - (lastSeen.get(b.id) ?? 0))
+      .slice(0, limit);
+  }
+
   const providers = enabledProviders();
   let polled = 0;
 
-  for (const w of watches ?? []) {
+  for (const w of targets) {
     for (const p of providers) {
       let result;
       try {

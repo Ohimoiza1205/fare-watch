@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComposedItem } from "@/lib/planner/day";
 import type { AlternativeOption } from "@/lib/planner/alternatives";
 import { formatMoney } from "@/lib/planner/format";
@@ -8,25 +8,68 @@ import { categoryTags } from "@/lib/planner/schedule";
 import { categoryTagStyle } from "@/lib/planner/categoryColor";
 import { PriceTag } from "./PriceTag";
 import { VenueImage } from "./VenueImage";
+import { SpotlightCard } from "@/components/SpotlightCard";
 
 // One activity as a schedule row. The time and a numbered node sit in the left
 // rail, joined by a connector so a day reads top to bottom. The card lifts on
 // hover and opens to its detail on click, where the swap control fetches real
 // alternatives in the same category and lets the traveller replace the item.
+// A lock holds the item against swaps; the overflow menu carries swap and
+// remove, the only two mutations the item supports.
 
-function Node({ number, isFirst, isLast }: { number: number; isFirst: boolean; isLast: boolean }) {
+// The numbered node doubles as the map affordance: when the item carries
+// coordinates, clicking it selects the matching pin. Selected reads as filled
+// ink, still neutral; colour stays reserved for status.
+function Node({
+  number,
+  isFirst,
+  isLast,
+  selected = false,
+  onSelect,
+}: {
+  number: number;
+  isFirst: boolean;
+  isLast: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
+  // A hollow ring node; filled only while its map pin is selected.
+  const face = (
+    <span
+      className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem]"
+      style={
+        selected
+          ? { background: "var(--ink-1)", color: "var(--on-ink)" }
+          : {
+              background: "transparent",
+              color: "var(--ink-2)",
+              boxShadow: "inset 0 0 0 1.5px var(--ink-3)",
+            }
+      }
+    >
+      {number}
+    </span>
+  );
   return (
     <div className="relative flex h-full flex-col items-center">
       <span
         className="w-px flex-1"
         style={{ background: isFirst ? "transparent" : "var(--hairline-strong)" }}
       />
-      <span
-        className="num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem] ink-2"
-        style={{ background: "var(--surface-2)", boxShadow: "0 0 0 1px var(--hairline-strong)" }}
-      >
-        {number}
-      </span>
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-pressed={selected}
+          aria-label="Show on map"
+          title="Show on map"
+          className="pressable shrink-0 rounded-full hover:scale-110"
+        >
+          {face}
+        </button>
+      ) : (
+        face
+      )}
       <span
         className="w-px flex-1"
         style={{ background: isLast ? "transparent" : "var(--hairline-strong)" }}
@@ -52,6 +95,53 @@ function Tag({
   );
 }
 
+function LockIcon({ locked }: { locked: boolean }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+      {locked ? (
+        <>
+          <rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor" />
+          <path
+            d="M5 7V5a3 3 0 0 1 6 0v2"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+        </>
+      ) : (
+        <>
+          <rect
+            x="3"
+            y="7"
+            width="10"
+            height="7"
+            rx="1.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M5 7V5a3 3 0 0 1 6 0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function DotsIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+      <circle cx="8" cy="3" r="1.4" />
+      <circle cx="8" cy="8" r="1.4" />
+      <circle cx="8" cy="13" r="1.4" />
+    </svg>
+  );
+}
+
 export function ActivityRow({
   item,
   number,
@@ -60,6 +150,11 @@ export function ActivityRow({
   isFirst,
   isLast,
   onReplace,
+  onRemove,
+  mapSelected = false,
+  onShowOnMap,
+  highlighted = false,
+  onHighlightEnd,
 }: {
   item: ComposedItem;
   number: number;
@@ -68,18 +163,52 @@ export function ActivityRow({
   isFirst: boolean;
   isLast: boolean;
   onReplace: (next: ComposedItem) => void;
+  onRemove: () => Promise<void>;
+  mapSelected?: boolean;
+  onShowOnMap?: () => void;
+  highlighted?: boolean;
+  onHighlightEnd?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [alts, setAlts] = useState<AlternativeOption[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const title = item.venue ?? item.title;
+  const hasPrice = item.price != null || item.priceMax != null;
   const perTraveller =
     item.price != null && travellers > 0 ? item.price / travellers : null;
   const basis = item.isEstimated
     ? item.note ?? "Estimated, typical local range for the party."
     : `Confirmed price via ${item.priceSource ?? "a real source"}.`;
+
+  // Close the overflow menu on outside click or Escape; Escape hands focus
+  // back to the trigger so the keyboard does not fall off the row.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (!menuRef.current?.contains(t) && !triggerRef.current?.contains(t)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   async function loadAlternatives() {
     setLoading(true);
@@ -113,50 +242,208 @@ export function ActivityRow({
     }
   }
 
+  // Optimistic hold: the row reads locked at once, the write follows, a
+  // failure reverts to the truth.
+  async function toggleLock() {
+    const next = { ...item, locked: !item.locked };
+    onReplace(next);
+    try {
+      const res = await fetch(`/api/items/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locked: next.locked }),
+      });
+      const data = (await res.json()) as { item?: ComposedItem };
+      if (!res.ok || !data.item) onReplace(item);
+    } catch {
+      onReplace(item);
+    }
+  }
+
+  function startSwap() {
+    setMenuOpen(false);
+    setOpen(true);
+    if (alts === null && !loading) void loadAlternatives();
+  }
+
+  async function handleRemove() {
+    setRemoving(true);
+    try {
+      await onRemove();
+    } finally {
+      setRemoving(false);
+      setMenuOpen(false);
+    }
+  }
+
+  const ghostControl =
+    "pressable flex h-6 w-6 items-center justify-center rounded-md";
+  const ghostHidden =
+    "opacity-0 ink-3 hover:text-[var(--ink-1)] group-hover/card:opacity-100 group-focus-within/card:opacity-100";
+
   return (
-    <div className="grid grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] gap-x-2">
+    <div
+      className="grid grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] gap-x-2"
+      data-item-id={item.id}
+    >
       <span className="num pt-3 text-right text-[0.6875rem] ink-3">{time}</span>
-      <Node number={number} isFirst={isFirst} isLast={isLast} />
+      <Node
+        number={number}
+        isFirst={isFirst}
+        isLast={isLast}
+        selected={mapSelected}
+        onSelect={onShowOnMap}
+      />
 
-      <div className="group pb-3">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          className="flex w-full gap-3 rounded-xl p-2.5 text-left surface-2 shadow-[var(--elev-raise)] transition-[transform,box-shadow] duration-200 ease-[var(--ease)] hover:-translate-y-0.5 hover:shadow-[var(--elev-float)]"
+      <div className="pb-3">
+        <SpotlightCard className="rounded-xl">
+        <div
+          className={`group/card relative flex w-full gap-2 rounded-xl p-2.5 surface-2 shadow-[var(--elev-raise)] transition-[box-shadow] duration-[var(--d1)] ease-[var(--ease)] hover:shadow-[var(--elev-float)] ${
+            highlighted ? "planner-locate" : ""
+          }`}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "planner-locate") onHighlightEnd?.();
+          }}
         >
-          <VenueImage
-            category={item.category}
-            venueName={item.venue}
-            active={open}
-            className="h-16 w-16 shrink-0 rounded-lg"
-          />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className="flex min-w-0 flex-1 gap-3 text-left"
+          >
+            <VenueImage
+              category={item.category}
+              venueName={item.venue}
+              active={open}
+              className="h-16 w-16 shrink-0 rounded-lg"
+            />
 
-          <div className="min-w-0 flex-1">
-            <div className="eyebrow">{item.category}</div>
-            <div className="mt-0.5 truncate text-sm ink-0">{title}</div>
-            <div className="mt-1.5 flex flex-wrap gap-1">
-              {categoryTags(item.category).map((t) => (
-                <Tag key={t} style={categoryTagStyle(item.category)}>
-                  {t}
-                </Tag>
-              ))}
+            <div className="min-w-0 flex-1">
+              <div className="eyebrow">{item.category}</div>
+              <div className="mt-0.5 truncate text-sm ink-0">{title}</div>
+              {item.address && (
+                <div className="mt-0.5 truncate text-[0.6875rem] ink-3">
+                  {item.address}
+                </div>
+              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {categoryTags(item.category).map((t) => (
+                  <Tag key={t} style={categoryTagStyle(item.category)}>
+                    {t}
+                  </Tag>
+                ))}
+                <span className="num flex items-center gap-1 text-[0.625rem] ink-3">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-2.5 w-2.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
+                  Stop {number}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end justify-between">
+              <span className="flex flex-col items-end">
+                <PriceTag
+                  price={item.price}
+                  priceMax={item.priceMax}
+                  currency={item.currency}
+                  isEstimated={item.isEstimated}
+                  className="text-sm"
+                />
+                {hasPrice && (
+                  <span className="num mt-0.5 text-[0.625rem] ink-3">
+                    {travellers > 1 ? `for ${travellers} people` : "per person"}
+                  </span>
+                )}
+              </span>
+              <span className="text-[0.625rem] ink-3 opacity-0 transition-opacity duration-[var(--d1)] group-hover/card:opacity-100">
+                details
+              </span>
+            </div>
+          </button>
+
+          <div className="flex shrink-0 items-start gap-0.5">
+            <button
+              type="button"
+              onClick={toggleLock}
+              aria-pressed={item.locked}
+              aria-label="Lock activity"
+              className={`${ghostControl} ${item.locked ? "" : ghostHidden}`}
+              style={
+                item.locked
+                  ? { background: "var(--accent-soft)", color: "var(--accent)" }
+                  : undefined
+              }
+            >
+              <LockIcon locked={item.locked} />
+            </button>
+
+            <div className="relative">
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="More actions"
+                className={`${ghostControl} ${menuOpen ? "ink-1" : ghostHidden}`}
+              >
+                <DotsIcon />
+              </button>
+
+              {menuOpen && (
+                <div
+                  ref={menuRef}
+                  role="menu"
+                  aria-label="Activity actions"
+                  className="absolute right-0 top-full z-10 mt-1 w-44 rounded-lg p-1 surface-3"
+                  style={{
+                    boxShadow: "var(--elev-float), 0 0 0 1px var(--hairline-strong)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={startSwap}
+                    disabled={item.locked}
+                    className={`pressable block w-full rounded-md px-2.5 py-1.5 text-left text-xs ${
+                      item.locked
+                        ? "ink-4"
+                        : "ink-1 transition-colors duration-[var(--d1)] hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
+                    }`}
+                  >
+                    Swap
+                  </button>
+                  {item.locked && (
+                    <p className="px-2.5 pb-1 text-[0.625rem] ink-3">
+                      Locked. Unlock to swap.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleRemove}
+                    disabled={removing}
+                    className="pressable block w-full rounded-md px-2.5 py-1.5 text-left text-xs ink-1 hover:text-[var(--ink-0)] hover:bg-[var(--surface-1)]"
+                  >
+                    {removing ? "Removing" : "Remove"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="flex flex-col items-end justify-between">
-            <PriceTag
-              price={item.price}
-              priceMax={item.priceMax}
-              currency={item.currency}
-              isEstimated={item.isEstimated}
-              className="text-sm"
-            />
-            <span className="text-[0.625rem] ink-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              details
-            </span>
-          </div>
-        </button>
+        </div>
+        </SpotlightCard>
 
         <div
           className={`grid transition-[grid-template-rows] duration-[var(--d2)] ease-[var(--ease)] ${
@@ -165,8 +452,7 @@ export function ActivityRow({
         >
           <div className="overflow-hidden">
             <div className="px-2.5 pt-2 text-xs leading-relaxed ink-3">
-              {item.address && <div className="ink-2">{item.address}</div>}
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 <span>{basis}</span>
                 {perTraveller != null && (
                   <span className="num">
@@ -186,12 +472,14 @@ export function ActivityRow({
               </div>
 
               <div className="mt-3">
-                {alts === null ? (
+                {item.locked ? (
+                  <p className="text-xs ink-3">Locked. Unlock to swap.</p>
+                ) : alts === null ? (
                   <button
                     type="button"
                     onClick={loadAlternatives}
                     disabled={loading}
-                    className="rounded-md border px-2.5 py-1 text-xs ink-1 transition-colors hover:text-[var(--ink-0)]"
+                    className="pressable rounded-md border px-2.5 py-1 text-xs ink-1 hover:text-[var(--ink-0)]"
                     style={{ borderColor: "var(--hairline-strong)" }}
                   >
                     {loading ? "Finding real options" : "Swap this activity"}
@@ -224,8 +512,8 @@ export function ActivityRow({
                           type="button"
                           onClick={() => apply(o)}
                           disabled={applying === o.venue}
-                          className="rounded-md px-2 py-1 text-[0.6875rem] font-medium text-white"
-                          style={{ background: "var(--ink-1)" }}
+                          className="pressable rounded-md px-2 py-1 text-[0.6875rem] font-medium"
+                          style={{ background: "var(--ink-1)", color: "var(--on-ink)" }}
                         >
                           {applying === o.venue ? "Using" : "Use"}
                         </button>

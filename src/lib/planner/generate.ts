@@ -45,6 +45,14 @@ export async function generateTrip(intake: TripIntake): Promise<{ id: string }> 
     fetchWeatherRange({ lat: geo.lat, lon: geo.lon, dates }),
   ]);
 
+  // A trip with no venues at all is not a trip, it is a failed lookup. Refuse
+  // plainly instead of saving an empty shell.
+  if (venuesByCategory.size === 0) {
+    throw new PlannerError(
+      "No venues found for this destination right now. The lookup may be rate limited; try again in a minute."
+    );
+  }
+
   const planned = arrangeTrip({
     startDate: resolved.startDate,
     lengthDays: resolved.lengthDays,

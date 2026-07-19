@@ -8,7 +8,27 @@ export type Priced = {
   price: number | null; // representative party figure, the average
   priceMax: number | null; // conservative party figure; null means no spread
   isEstimated: boolean;
+  // The currency the figure was actually priced in. Sums must never mix
+  // currencies: a figure is either in the sum's currency or out of the sum.
+  currency?: string | null;
 };
+
+// Splits priced items into the ones that belong in a sum stated in the given
+// currency and the ones that do not. An item without a stated currency is
+// treated as native (older rows predate the column being threaded through).
+// Never relabel a figure into a currency it was not priced in.
+export function partitionByCurrency(
+  items: Priced[],
+  currency: string
+): { native: Priced[]; foreign: number } {
+  const native: Priced[] = [];
+  let foreign = 0;
+  for (const it of items) {
+    if (it.currency != null && it.currency !== currency) foreign++;
+    else native.push(it);
+  }
+  return { native, foreign };
+}
 
 export type Rollup = {
   average: number; // realistic middle
@@ -64,7 +84,9 @@ export function computeTripBudget(
   items: Priced[],
   opts: { currency: string; limit?: number | null }
 ): TripBudget {
-  const base = rollup(items);
+  // A figure priced in another currency is left out of the sums rather than
+  // silently counted under the wrong label.
+  const base = rollup(partitionByCurrency(items, opts.currency).native);
   const limit = opts.limit ?? null;
   // Warn on the realistic middle crossing the maximum, not the worst case, so
   // the warning means the plan is actually over rather than merely at risk.

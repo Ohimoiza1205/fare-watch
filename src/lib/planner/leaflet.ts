@@ -9,9 +9,22 @@ export interface LLayer {
   remove(): void;
 }
 
+export interface LMarker extends LLayer {
+  on(type: string, fn: () => void): LMarker;
+  getElement(): HTMLElement | undefined;
+}
+
+export interface LPopup {
+  setLatLng(latlng: LatLng): LPopup;
+  setContent(html: string): LPopup;
+  openOn(map: LMap): LPopup;
+}
+
 export interface LMap {
   setView(center: LatLng, zoom: number): LMap;
   fitBounds(bounds: LatLng[], options?: Record<string, unknown>): LMap;
+  on(type: string, fn: () => void): LMap;
+  closePopup(): LMap;
   invalidateSize(): void;
   remove(): void;
 }
@@ -23,9 +36,10 @@ export interface LDivIcon {
 export interface LStatic {
   map(el: HTMLElement, options?: Record<string, unknown>): LMap;
   tileLayer(url: string, options?: Record<string, unknown>): LLayer;
-  marker(latlng: LatLng, options?: { icon?: LDivIcon }): LLayer;
+  marker(latlng: LatLng, options?: { icon?: LDivIcon }): LMarker;
   polyline(points: LatLng[], options?: Record<string, unknown>): LLayer;
   divIcon(options: Record<string, unknown>): LDivIcon;
+  popup(options?: Record<string, unknown>): LPopup;
 }
 
 declare global {

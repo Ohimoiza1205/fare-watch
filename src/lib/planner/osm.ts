@@ -2,6 +2,8 @@
 // place for the request and the small amount of parsing, so the discovery pass
 // and the single venue lookup cannot drift apart.
 
+import { USER_AGENT } from "./http";
+
 export const OVERPASS = "https://overpass-api.de/api/interpreter";
 
 export type OverpassTags = Record<string, string | undefined>;
@@ -16,18 +18,29 @@ export type OverpassElement = {
 type OverpassResponse = { elements?: OverpassElement[] };
 
 export async function overpassQuery(query: string): Promise<OverpassElement[]> {
-  const res = await fetch(OVERPASS, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "FareWatch/1.0 (personal trip planner)",
-    },
-    body: `data=${encodeURIComponent(query)}`,
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const json = (await res.json()) as OverpassResponse;
-  return json?.elements ?? [];
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(OVERPASS, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": USER_AGENT,
+      },
+      body: `data=${encodeURIComponent(query)}`,
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const json = (await res.json()) as OverpassResponse;
+      return json?.elements ?? [];
+    }
+    // Overpass is a shared free service and throttles bursts. One short-fused
+    // retry rides out a transient throttle or gateway timeout; the status is
+    // logged either way so an empty result is never a silent mystery.
+    console.error(
+      `overpass query failed ${res.status}${attempt ? " after retry" : ""}`
+    );
+    if (attempt >= 1 || ![429, 502, 504].includes(res.status)) return [];
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 }
 
 export function elementCoords(

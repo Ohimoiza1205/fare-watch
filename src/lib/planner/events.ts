@@ -7,6 +7,8 @@
 // One call fetches the whole trip window, so the itinerary can place each event
 // on its real date without hitting the free tier per day.
 
+import { IDENT_HEADERS } from "./http";
+
 const DISCOVERY = "https://app.ticketmaster.com/discovery/v2/events.json";
 
 // Per ticket, not per party. The arranger scales by the number of travellers.
@@ -118,6 +120,7 @@ export async function fetchEventsByDate(opts: {
   });
 
   const res = await fetch(`${DISCOVERY}?${params}`, {
+    headers: IDENT_HEADERS,
     next: { revalidate: 3600 },
   });
   if (!res.ok) return out;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CategoryIcon } from "./CategoryIcon";
 import { categoryImage, fetchVenuePhoto } from "@/lib/planner/venueImage";
+import { categoryPlaceholderStyle } from "@/lib/planner/categoryColor";
 
 // The image on a card. A warm tile with the category glyph always sits
 // underneath, so a card is never a broken or grey box. The category image
@@ -11,13 +12,6 @@ import { categoryImage, fetchVenuePhoto } from "@/lib/planner/venueImage";
 // that provider returns nothing, so the category image stands.
 
 const photoCache = new Map<string, string | null>();
-
-// A warm hue per category, kept in a narrow band so tiles feel like one set.
-function warmHue(category: string): number {
-  let h = 0;
-  for (const c of category) h = (h * 31 + c.charCodeAt(0)) % 360;
-  return 22 + (h % 26); // 22 to 47 degrees, amber to clay
-}
 
 export function VenueImage({
   category,
@@ -61,17 +55,12 @@ export function VenueImage({
     };
   }, [active, category, venueName]);
 
-  const hue = warmHue(category);
-
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {/* the warm tile, always present */}
       <div
         className="absolute inset-0 flex items-center justify-center"
-        style={{
-          background: `linear-gradient(150deg, hsl(${hue} 46% 84%), hsl(${hue} 40% 73%))`,
-          color: `hsl(${hue} 40% 38%)`,
-        }}
+        style={categoryPlaceholderStyle(category)}
       >
         <CategoryIcon category={category} className="h-8 w-8 opacity-80" />
       </div>

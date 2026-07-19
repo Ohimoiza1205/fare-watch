@@ -1,86 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/db/client";
-import { loadTripPlan } from "@/lib/planner/repo";
-import { findAlternatives } from "@/lib/planner/alternatives";
-import { assistantConfig, complete, type ChatTurn } from "@/lib/planner/assistant/provider";
-import {
-  buildSystemPrompt,
-  parseAssistant,
-  type AssistantAction,
-} from "@/lib/planner/assistant/engine";
-import type { AssistantSuggestion } from "@/lib/planner/assistant/types";
-import type { ComposedDay } from "@/lib/planner/day";
+import { loadTripPlan, type TripPlan } from "@/lib/planner/repo";
+import { runGrounded } from "@/lib/assistant/grounding";
+import { plannerTools } from "@/lib/assistant/tools/planner";
+import { getWatchSummaryTool } from "@/lib/assistant/tools/tracker";
+import type { SwapProposal } from "@/lib/assistant/proposal";
+import type { ChatTurn } from "@/lib/assistant/provider";
 
 export const maxDuration = 60;
 
-function pricedTarget(day: ComposedDay): number | null {
-  let bestIdx: number | null = null;
-  let bestPrice = -Infinity;
-  day.items.forEach((it, i) => {
-    if (it.price != null && it.price > bestPrice) {
-      bestPrice = it.price;
-      bestIdx = i;
-    }
-  });
-  return bestIdx;
-}
+// The planner-scoped assistant. Every factual answer flows through the trip's
+// tools plus one bridge into the tracker's watch summary; the grounding
+// pipeline in runGrounded is the only path a reply reaches the client. A
+// propose_swap call stages a structured proposal that rides the response next
+// to the reply text; applying it is the confirm route's job, never the model's.
 
-async function resolve(
-  action: AssistantAction,
-  days: ComposedDay[],
-  ctx: { destLat: number | null; destLon: number | null; travellers: number; currency: string }
-): Promise<AssistantSuggestion | null> {
-  let dayIndex = -1;
-  let position = -1;
-
-  if (action.type === "cheaper") {
-    dayIndex = action.dayIndex;
-    const day = days[dayIndex];
-    if (!day) return null;
-    const target = pricedTarget(day);
-    if (target === null) return null;
-    position = target;
-  } else if (action.type === "alternatives") {
-    dayIndex = action.dayIndex;
-    position = action.position;
-  } else {
-    return null;
-  }
-
-  const day = days[dayIndex];
-  const item = day?.items[position];
-  if (!item) return null;
-
-  const lat = item.lat ?? ctx.destLat;
-  const lon = item.lon ?? ctx.destLon;
-  if (lat == null || lon == null) return null;
-
-  let options = await findAlternatives({
-    lat,
-    lon,
-    category: item.category,
-    travellers: ctx.travellers,
-    currency: ctx.currency,
-    excludeVenue: item.venue,
-  });
-
-  // For a cheaper request, keep only options below the current figure, so the
-  // suggestion honours the ask. The prices are still the lookup's, never the
-  // model's.
-  if (action.type === "cheaper" && item.price != null) {
-    const cheaper = options.filter(
-      (o) => o.price != null && o.price < (item.price as number)
-    );
-    if (cheaper.length) options = cheaper;
-  }
-
-  return {
-    itemRef: { dayIndex, position },
-    currentName: item.venue ?? item.title,
-    currentPrice: item.price,
-    currency: item.currency,
-    options,
-  };
+function systemPrompt(plan: TripPlan): string {
+  const label = plan.trip.dest_label ?? plan.trip.destination;
+  return [
+    `You help a traveller understand a planned trip to ${label} and answer questions about it.`,
+    "Answer only from tool results. Never invent a venue, a price, a date, or a route.",
+    "Every figure you state must come from a tool result, with its currency, and estimates must be called estimates.",
+    "If a lookup returns nothing or lacks the data asked for, say so plainly.",
+    "Use get_trip for the plan, find_alternatives to explore candidates, get_budget for the totals, and get_watch_summary when the question touches watched flight fares.",
+    "When the traveller asks to change, replace, or swap an item, call propose_swap for it. The proposal appears in the interface where the traveller confirms or dismisses it. Reply by pointing at the options plainly.",
+    "Never say a swap happened. A swap is applied only through the interface; when one has been, the conversation carries a system note saying so, and only then may you refer to it as done.",
+    "If propose_swap finds no alternatives, say plainly that none were found.",
+    "Keep replies short and plain. No marketing language.",
+  ].join("\n");
 }
 
 export async function POST(
@@ -96,14 +43,8 @@ export async function POST(
     return NextResponse.json({ error: "Send a JSON body." }, { status: 400 });
   }
   const messages = Array.isArray(body.messages) ? body.messages : [];
-
-  const cfg = assistantConfig();
-  if (!cfg) {
-    return NextResponse.json({
-      reply:
-        "The assistant is not configured. Set ASSISTANT_API_KEY to turn it on.",
-      suggestion: null,
-    });
+  if (!messages.some((m) => m.role === "user")) {
+    return NextResponse.json({ error: "Send a message." }, { status: 400 });
   }
 
   const db = createServiceClient();
@@ -112,23 +53,30 @@ export async function POST(
     return NextResponse.json({ error: "Trip not found." }, { status: 404 });
   }
 
-  let text: string;
+  // Proposals staged during this turn's tool calls; the last one rides the
+  // response. They are built entirely from server-side lookups, so they stay
+  // grounded even when the prose needs a retry.
+  const proposals: SwapProposal[] = [];
+
   try {
-    text = await complete(cfg, buildSystemPrompt(plan), messages);
+    const result = await runGrounded({
+      system: systemPrompt(plan),
+      turns: messages,
+      tools: [
+        ...plannerTools(plan, { onProposal: (p) => proposals.push(p) }),
+        getWatchSummaryTool(),
+      ],
+    });
+    return NextResponse.json({
+      reply: result.reply,
+      toolLog: result.toolLog,
+      proposal: proposals.at(-1) ?? null,
+    });
   } catch {
     return NextResponse.json({
       reply: "The assistant could not be reached. Please try again.",
-      suggestion: null,
+      toolLog: [],
+      proposal: null,
     });
   }
-
-  const { reply, action } = parseAssistant(text);
-  const suggestion = await resolve(action, plan.days, {
-    destLat: plan.trip.dest_lat,
-    destLon: plan.trip.dest_lon,
-    travellers: plan.trip.travellers,
-    currency: plan.trip.currency,
-  });
-
-  return NextResponse.json({ reply, suggestion });
 }

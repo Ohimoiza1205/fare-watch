@@ -48,7 +48,11 @@ export async function findAlternatives(opts: {
   const query = `[out:json][timeout:25];(${selectors});out center 60;`;
 
   const elements = await overpassQuery(query);
-  const { price, priceMax } = estimateParty(category.id, opts.travellers);
+  const { price, priceMax } = estimateParty(
+    category.id,
+    opts.travellers,
+    opts.currency
+  );
 
   const seen = new Set<string>();
   const options: AlternativeOption[] = [];

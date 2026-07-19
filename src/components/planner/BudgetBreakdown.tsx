@@ -5,10 +5,11 @@ import { PriceRoll } from "@/components/PriceRoll";
 import { categoryBreakdown, type BreakdownItem } from "@/lib/planner/breakdown";
 import { categoryById } from "@/lib/planner/categories";
 
-// The per category rows below the donut, in the same colours, amounts, and
-// percents. The figures come from the real items, so a confirmed price and an
-// estimate both count at their own value. The control at the bottom switches
-// between the selected day and the whole trip.
+// The per category rows below the ring, in the same colours, amounts, and
+// percents; they are the ring's legend, so the trip view leads. The figures
+// come from the real items, so a confirmed price and an estimate both count at
+// their own value. The control at the bottom switches to the selected day.
+// Hovering a row tells the ring which arc to leave bright.
 
 function label(category: string): string {
   return categoryById(category)?.label ?? category;
@@ -18,25 +19,32 @@ export function BudgetBreakdown({
   dayItems,
   tripItems,
   currency,
+  onHoverCategory,
 }: {
   dayItems: BreakdownItem[];
   tripItems: BreakdownItem[];
   currency: string;
+  onHoverCategory?: (category: string | null) => void;
 }) {
-  const [full, setFull] = useState(false);
+  const [full, setFull] = useState(true);
   const source = full ? tripItems : dayItems;
   const { rows } = useMemo(() => categoryBreakdown(source), [source]);
 
   return (
-    <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
+    <div>
       <h3 className="eyebrow">{full ? "Trip breakdown" : "Day breakdown"}</h3>
 
       {rows.length === 0 ? (
         <p className="mt-3 text-xs ink-3">No priced items yet.</p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {rows.map((row) => (
-            <li key={row.category} className="flex items-center gap-2.5 text-xs">
+            <li
+              key={row.category}
+              className="flex items-center gap-2.5 text-xs"
+              onMouseEnter={() => onHoverCategory?.(row.category)}
+              onMouseLeave={() => onHoverCategory?.(null)}
+            >
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-sm"
                 style={{ background: row.color }}
@@ -59,7 +67,7 @@ export function BudgetBreakdown({
       <button
         type="button"
         onClick={() => setFull((v) => !v)}
-        className="mt-4 text-xs ink-2 underline decoration-[var(--hairline-strong)] underline-offset-2 transition-colors hover:text-[var(--ink-0)]"
+        className="pressable mt-4 text-xs ink-2 underline decoration-[var(--hairline-strong)] underline-offset-2 hover:text-[var(--ink-0)]"
       >
         {full ? "View day budget" : "View full budget"}
       </button>
