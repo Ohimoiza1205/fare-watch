@@ -208,6 +208,12 @@ export default async function Settings() {
   ];
   const configuredCount = channels.filter((c) => c.configured).length;
 
+  const rawQuiet = process.env.QUIET_HOURS?.trim();
+  const quietMatch = rawQuiet ? /^(\d{1,2})-(\d{1,2})$/.exec(rawQuiet) : null;
+  const quietHours = quietMatch
+    ? `${quietMatch[1].padStart(2, "0")}:00 to ${quietMatch[2].padStart(2, "0")}:00`
+    : null;
+
   const cadence = pollCadenceMs();
   let lastPollAt: string | null = null;
   let routes = 0;
@@ -310,6 +316,14 @@ export default async function Settings() {
             >
               The same reason does not fire twice for a watch within 12 hours;
               mistake fares within 1 hour.
+            </ThresholdRow>
+            <ThresholdRow
+              glyph="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"
+              title="Quiet hours"
+              value={quietHours ?? "not set"}
+            >
+              Threshold, percentile, and drop alerts wait out these hours;
+              mistake fares always break through.
             </ThresholdRow>
           </div>
         </Card>

@@ -1,6 +1,23 @@
 import { sendEmail } from "./email";
 import { sendPush } from "./push";
 import { sendWhatsApp } from "./whatsapp";
+
+// P13: quiet hours hold the routine reasons overnight; a mistake fare always
+// breaks through because it can die in minutes. QUIET_HOURS is "start-end"
+// in server-local hours, e.g. "22-7"; unset disables the hold. A held alert
+// is not recorded, so the first poll after the window re-detects it and
+// delivers only if the fare still qualifies; alerting in the morning on a
+// price that died overnight would be announcing a deal that does not exist.
+export function inQuietHours(now: Date, raw = process.env.QUIET_HOURS): boolean {
+  if (!raw) return false;
+  const m = /^(\d{1,2})-(\d{1,2})$/.exec(raw.trim());
+  if (!m) return false;
+  const start = Number(m[1]) % 24;
+  const end = Number(m[2]) % 24;
+  if (start === end) return false;
+  const h = now.getHours();
+  return start < end ? h >= start && h < end : h >= start || h < end;
+}
 import type { FareQuote } from "@/lib/providers/types";
 import type { FiredSignal } from "@/lib/detect/signals";
 import type { WatchRow } from "@/lib/db/queries";
@@ -27,6 +44,11 @@ export async function dispatch(
     .gte("sent_at", cutoff)
     .limit(1);
   if (recent && recent.length) return;
+
+  if (signal.reason !== "mistake" && inQuietHours(new Date())) {
+    console.log(`alert held by quiet hours watch=${watch.id} reason=${signal.reason}`);
+    return;
+  }
 
   // Trust on the lock screen comes from visible evidence (P9): the body
   // states the arithmetic the alert fired on, not just the verdict.
