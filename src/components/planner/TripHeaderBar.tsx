@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DestinationImage } from "@/components/DestinationImage";
 
@@ -9,8 +10,9 @@ import { DestinationImage } from "@/components/DestinationImage";
 // canvas, with the itinerary eyebrow, the editable kinetic trip title, and the
 // real dates, length, and country on a soft white scrim. Edit trip opens the
 // brief in place; share and the assistant action keep their existing
-// behaviour. The dates chip keeps its picker with apply disabled, because a
-// silent desync would be worse than no edit.
+// behaviour. The dates chip applies a same-length shift through the P7
+// re-flow endpoint; a different length is refused with the server's plain
+// sentence, because regeneration is the honest path to a new length.
 
 type Brief = {
   destination: string;
@@ -27,21 +29,50 @@ function DatesChip({
   dates,
   startDate,
   endDate,
+  tripId,
 }: {
   dates: string;
   startDate: string | null;
   endDate: string | null;
+  tripId: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [depart, setDepart] = useState(startDate ?? "");
   const [ret, setRet] = useState(endDate ?? "");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
   const chipRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const departRef = useRef<HTMLInputElement>(null);
 
   function close() {
     setOpen(false);
+    setNote(null);
     chipRef.current?.focus();
+  }
+
+  async function apply() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const res = await fetch(`/api/trips/${tripId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startDate: depart, endDate: ret }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNote(typeof json.error === "string" ? json.error : "The change did not apply.");
+        return;
+      }
+      close();
+      router.refresh();
+    } catch {
+      setNote("The change did not apply.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -121,14 +152,16 @@ function DatesChip({
           </label>
           <button
             type="button"
-            disabled
-            className="mt-3 w-full rounded-md px-3 py-1.5 text-xs font-medium opacity-50"
+            disabled={busy || !depart || !ret}
+            onClick={apply}
+            className="pressable mt-3 w-full rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
             style={{ background: "var(--ink-0)", color: "var(--on-ink)" }}
           >
-            Apply
+            {busy ? "Applying" : "Apply"}
           </button>
           <p className="mt-2 text-[0.6875rem] leading-relaxed ink-3">
-            Date changes rebuild the plan. Not built yet.
+            {note ??
+              "A same length range shifts every day and refreshes its weather. To change the length, regenerate the trip."}
           </p>
         </div>
       )}
@@ -147,6 +180,7 @@ export function TripHeaderBar({
   travellers,
   budget,
   brief,
+  tripId,
   backHref = "/app/plan",
 }: {
   defaultTitle: string;
@@ -159,6 +193,7 @@ export function TripHeaderBar({
   travellers: number;
   budget: string | null;
   brief: Brief;
+  tripId: string;
   backHref?: string;
 }) {
   const [title, setTitle] = useState(defaultTitle);
@@ -284,7 +319,7 @@ export function TripHeaderBar({
               {subLine}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <DatesChip dates={dates} startDate={startDate} endDate={endDate} />
+              <DatesChip dates={dates} startDate={startDate} endDate={endDate} tripId={tripId} />
               <span className="rounded-full px-2.5 py-1 text-xs ink-2 surface-1">
                 <span className="num">{travellers}</span> travellers
               </span>

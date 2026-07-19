@@ -39,6 +39,7 @@ export default async function TripPage({
         dates={dates}
         startDate={trip.start_date}
         endDate={trip.end_date}
+        tripId={trip.id}
         travellers={trip.travellers}
         budget={
           trip.budget_ceiling != null
