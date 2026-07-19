@@ -48,8 +48,8 @@ export function WatchCard({
   return (
     <div className="elev-raise rounded-[var(--r-card)]">
       <div
-        className="rounded-[var(--r-card)] p-5"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+        className="surface-2 rounded-[var(--r-card)] p-5"
+        style={{ border: "1px solid var(--hairline)" }}
       >
         <button
           type="button"

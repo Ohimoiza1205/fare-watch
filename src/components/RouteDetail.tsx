@@ -37,8 +37,8 @@ export function RouteDetail({
 
   return (
     <div
-      className="mt-4 rounded-xl px-5 py-5"
-      style={{ background: "var(--surface-1)", border: "1px solid var(--hairline)" }}
+      className="surface-1 mt-4 rounded-xl px-5 py-5"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <ScrubSparkline
         points={points}

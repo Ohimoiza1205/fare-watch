@@ -40,8 +40,8 @@ function Panel({
 }) {
   return (
     <div
-      className="elev-raise rounded-[var(--r-card)] p-4"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise rounded-[var(--r-card)] p-4"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <div className="flex items-start justify-between">
         <span className="eyebrow">{label}</span>

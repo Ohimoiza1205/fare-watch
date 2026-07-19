@@ -38,8 +38,8 @@ export function RecentActivity({ events }: { events: ActivityEvent[] }) {
   return (
     <div
       ref={ref}
-      className="elev-raise mt-6 rounded-[var(--r-card)] p-5"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise mt-6 rounded-[var(--r-card)] p-5"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <div className="flex items-baseline justify-between">
         <span className="eyebrow">Recent activity</span>

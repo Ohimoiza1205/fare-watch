@@ -275,8 +275,7 @@ export function AssistantChat({
             return (
               <div key={i} className={e.kind === "user" ? "text-right" : ""}>
                 <span
-                  className="inline-block max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-left text-xs leading-relaxed ink-1"
-                  style={{ background: "var(--surface-1)" }}
+                  className="surface-1 inline-block max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-left text-xs leading-relaxed ink-1"
                 >
                   {e.text}
                 </span>

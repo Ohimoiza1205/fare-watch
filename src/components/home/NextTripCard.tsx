@@ -34,8 +34,8 @@ export function NextTripCard({
   if (!trip) {
     return (
       <div
-        className="elev-raise flex min-h-64 flex-col items-center justify-center gap-3 rounded-[var(--r-card)] p-6"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+        className="surface-2 elev-raise flex min-h-64 flex-col items-center justify-center gap-3 rounded-[var(--r-card)] p-6"
+        style={{ border: "1px solid var(--hairline)" }}
       >
         <p className="text-sm" style={{ color: "var(--ink-2)" }}>
           {hasPastTrips ? "No upcoming trips." : "No trips yet."}
@@ -53,8 +53,8 @@ export function NextTripCard({
 
   return (
     <div
-      className="elev-raise flex flex-col overflow-hidden rounded-[var(--r-card)]"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise flex flex-col overflow-hidden rounded-[var(--r-card)]"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <div className="relative">
         <DestinationImage place={trip.city} className="h-24 w-full" />

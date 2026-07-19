@@ -125,9 +125,8 @@ export function HeatCalendar({
 
                       {entry && isHovered && (
                         <div
-                          className="num absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px]"
+                          className="surface-3 num absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px]"
                           style={{
-                            background: "var(--surface-3)",
                             border: "1px solid var(--hairline)",
                             color: "var(--ink-0)",
                           }}

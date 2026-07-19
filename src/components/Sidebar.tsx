@@ -68,7 +68,7 @@ export type SidebarWeather = {
 function WeatherCard({ weather }: { weather: SidebarWeather }) {
   const { tempMax, tempMin, unit, summary, estimated } = weather.snapshot;
   return (
-    <div className="mx-3 mt-1 rounded-lg px-3 py-2" style={{ background: "var(--surface-1)" }}>
+    <div className="surface-1 mx-3 mt-1 rounded-lg px-3 py-2">
       <span className="block truncate text-xs" style={{ color: "var(--ink-2)" }}>
         {weather.destLabel}
       </span>
@@ -168,8 +168,8 @@ export function Sidebar({
 
   return (
     <aside
-      className="sticky top-0 z-10 hidden h-screen w-56 shrink-0 flex-col border-r md:flex"
-      style={{ borderColor: "var(--hairline)", background: "var(--surface-1)" }}
+      className="surface-1 sticky top-0 z-10 hidden h-screen w-56 shrink-0 flex-col border-r md:flex"
+      style={{ borderColor: "var(--hairline)" }}
     >
       <div className="flex items-center gap-2.5 px-4 py-4">
         <span
@@ -268,8 +268,7 @@ export function Sidebar({
         </div>
         {cadenceMs != null && (
           <div
-            className="mt-2 h-1 overflow-hidden rounded-full"
-            style={{ background: "var(--surface-3)" }}
+            className="surface-3 mt-2 h-1 overflow-hidden rounded-full"
           >
             <div
               className="h-full rounded-full"

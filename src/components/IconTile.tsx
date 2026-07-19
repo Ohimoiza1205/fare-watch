@@ -9,7 +9,7 @@ const TONE_STYLE: Record<Tone, CSSProperties> = {
   warm: { background: "var(--warm-soft)", color: "var(--warm)" },
   amber: { background: "var(--amber-soft)", color: "var(--amber)" },
   indigo: { background: "color-mix(in srgb, var(--indigo) 14%, transparent)", color: "var(--indigo)" },
-  neutral: { background: "var(--surface-3)", color: "var(--ink-2)" },
+  neutral: { color: "var(--ink-2)" },
 };
 
 export function IconTile({
@@ -26,7 +26,7 @@ export function IconTile({
   const toneStyle = TONE_STYLE[tone];
   return (
     <div
-      className={`flex items-center justify-center ${className ?? ""}`}
+      className={`flex items-center justify-center ${tone === "neutral" ? "surface-3 " : ""}${className ?? ""}`}
       style={{
         width: size,
         height: size,

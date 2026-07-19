@@ -49,7 +49,6 @@ function Field({
 }
 
 const INPUT_STYLE = {
-  background: "var(--surface-1)",
   border: "1px solid var(--hairline-strong)",
   color: "var(--ink-0)",
 } as const;
@@ -101,8 +100,8 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="elev-raise mt-6 rounded-[var(--r-card)] p-5"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise mt-6 rounded-[var(--r-card)] p-5"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Field label="From">
@@ -111,7 +110,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
             onChange={(e) => set("origin")(e.target.value.toUpperCase())}
             placeholder="LHR"
             maxLength={3}
-            className="num rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 num rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
             required
           />
@@ -122,7 +121,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
             onChange={(e) => set("destination")(e.target.value.toUpperCase())}
             placeholder="JFK"
             maxLength={3}
-            className="num rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 num rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
             required
           />
@@ -132,7 +131,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
             type="date"
             value={form.departDate}
             onChange={(e) => set("departDate")(e.target.value)}
-            className="num rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 num rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
             required
           />
@@ -142,7 +141,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
             type="date"
             value={form.returnDate}
             onChange={(e) => set("returnDate")(e.target.value)}
-            className="num rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 num rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
             required
           />
@@ -151,7 +150,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
           <select
             value={form.cabin}
             onChange={(e) => set("cabin")(e.target.value)}
-            className="rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
           >
             <option value="1">Economy</option>
@@ -164,7 +163,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
           <select
             value={form.maxStops}
             onChange={(e) => set("maxStops")(e.target.value)}
-            className="rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
           >
             <option value="0">Any</option>
@@ -177,7 +176,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
           <select
             value={form.currency}
             onChange={(e) => set("currency")(e.target.value)}
-            className="rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
           >
             <option value="GBP">GBP</option>
@@ -192,7 +191,7 @@ function AddWatchForm({ onDone }: { onDone: () => void }) {
             value={form.targetPrice}
             onChange={(e) => set("targetPrice")(e.target.value.replace(/[^\d.]/g, ""))}
             placeholder="none"
-            className="num rounded-lg px-3 py-2 text-sm outline-none"
+            className="surface-1 num rounded-lg px-3 py-2 text-sm outline-none"
             style={INPUT_STYLE}
           />
         </Field>
@@ -274,8 +273,8 @@ export function WatchlistBoard({
 
       {summaries.length === 0 ? (
         <div
-          className="elev-raise mt-6 flex min-h-40 items-center justify-center rounded-[var(--r-card)] p-8"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+          className="surface-2 elev-raise mt-6 flex min-h-40 items-center justify-center rounded-[var(--r-card)] p-8"
+          style={{ border: "1px solid var(--hairline)" }}
         >
           <p className="text-sm" style={{ color: "var(--ink-2)" }}>
             No routes watched. Add one to start.

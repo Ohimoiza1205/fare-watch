@@ -262,8 +262,7 @@ export function DayMap({
     >
       <div
         ref={elRef}
-        className="h-52 w-full overflow-hidden rounded-lg"
-        style={{ background: "var(--surface-1)" }}
+        className="surface-1 h-52 w-full overflow-hidden rounded-lg"
         aria-label={`Map of ${stops.length} stops`}
       />
       <div className="mt-2 flex items-baseline justify-between text-xs ink-3">

@@ -254,8 +254,8 @@ export function StatCards({
             ))}
             {overflow > 0 && (
               <span
-                className="num rounded-full px-2 py-0.5 text-[0.6875rem] leading-none"
-                style={{ background: "var(--surface-1)", color: "var(--ink-3)" }}
+                className="surface-1 num rounded-full px-2 py-0.5 text-[0.6875rem] leading-none"
+                style={{ color: "var(--ink-3)" }}
               >
                 +{overflow}
               </span>

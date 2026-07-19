@@ -89,8 +89,8 @@ export function BestDealCard({
   if (!deal) {
     return (
       <div
-        className="elev-raise flex min-h-64 flex-col items-center justify-center gap-3 rounded-[var(--r-card)] p-8"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+        className="surface-2 elev-raise flex min-h-64 flex-col items-center justify-center gap-3 rounded-[var(--r-card)] p-8"
+        style={{ border: "1px solid var(--hairline)" }}
       >
         <span style={{ color: "var(--ink-4)" }}>
           <PlaneGlyph />

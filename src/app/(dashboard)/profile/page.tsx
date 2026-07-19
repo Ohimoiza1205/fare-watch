@@ -88,8 +88,8 @@ function StatCard({
 }) {
   return (
     <div
-      className="elev-raise rounded-[var(--r-card)] p-4"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise rounded-[var(--r-card)] p-4"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <span className="eyebrow">{label}</span>
       <div
@@ -145,14 +145,13 @@ export default async function Profile() {
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-8 lg:px-10">
       <div
-        className="elev-raise flex flex-wrap items-center justify-between gap-4 rounded-[var(--r-card)] p-5"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+        className="surface-2 elev-raise flex flex-wrap items-center justify-between gap-4 rounded-[var(--r-card)] p-5"
+        style={{ border: "1px solid var(--hairline)" }}
       >
         <div className="flex items-center gap-4">
           <span
-            className="num flex h-14 w-14 items-center justify-center rounded-full text-xl"
+            className="surface-3 num flex h-14 w-14 items-center justify-center rounded-full text-xl"
             style={{
-              background: "var(--surface-3)",
               color: "var(--ink-1)",
               boxShadow: "0 0 0 2px var(--cool-soft), 0 0 0 3px var(--cool)",
             }}
@@ -240,8 +239,8 @@ export default async function Profile() {
 
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <section
-          className="elev-raise rounded-[var(--r-card)] p-5"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+          className="surface-2 elev-raise rounded-[var(--r-card)] p-5"
+          style={{ border: "1px solid var(--hairline)" }}
         >
           <span className="eyebrow">Recent trips</span>
           {trips.length === 0 ? (
@@ -304,8 +303,8 @@ export default async function Profile() {
         </section>
 
         <section
-          className="elev-raise rounded-[var(--r-card)] p-5"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+          className="surface-2 elev-raise rounded-[var(--r-card)] p-5"
+          style={{ border: "1px solid var(--hairline)" }}
         >
           <div className="flex items-baseline justify-between">
             <span className="eyebrow">Account settings</span>

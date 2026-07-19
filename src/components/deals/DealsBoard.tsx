@@ -244,16 +244,15 @@ export function DealsBoard({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter routes"
-            className="num w-40 rounded-lg px-3 py-2 text-xs outline-none"
+            className="surface-2 num w-40 rounded-lg px-3 py-2 text-xs outline-none"
             style={{
-              background: "var(--surface-2)",
               border: "1px solid var(--hairline)",
               color: "var(--ink-1)",
             }}
           />
           <div
-            className="flex rounded-lg p-0.5"
-            style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+            className="surface-2 flex rounded-lg p-0.5"
+            style={{ border: "1px solid var(--hairline)" }}
           >
             {(["recency", "discount"] as const).map((s) => (
               <button
@@ -301,8 +300,8 @@ export function DealsBoard({
 
       {visible.length === 0 ? (
         <div
-          className="elev-raise mt-6 flex min-h-48 flex-col items-center justify-center gap-2 rounded-[var(--r-card)] p-8"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+          className="surface-2 elev-raise mt-6 flex min-h-48 flex-col items-center justify-center gap-2 rounded-[var(--r-card)] p-8"
+          style={{ border: "1px solid var(--hairline)" }}
         >
           <p className="text-sm" style={{ color: "var(--ink-2)" }}>
             {filter === "all"

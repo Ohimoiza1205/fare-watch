@@ -141,8 +141,8 @@ function Segmented<T extends string>({
 }) {
   return (
     <div
-      className="inline-flex rounded-xl p-1"
-      style={{ background: "var(--surface-1)", border: "1px solid var(--hairline)" }}
+      className="surface-1 inline-flex rounded-xl p-1"
+      style={{ border: "1px solid var(--hairline)" }}
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -184,8 +184,8 @@ function PickerTile({
 }) {
   return (
     <div
-      className="relative flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-      style={{ background: "var(--surface-1)", border: "1px solid var(--hairline-strong)" }}
+      className="surface-1 relative flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+      style={{ border: "1px solid var(--hairline-strong)" }}
     >
       <span style={{ color: "var(--ink-3)" }}>
         <Glyph d={icon} />
@@ -301,9 +301,8 @@ export function TripIntakeForm() {
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div
-        className="rounded-[var(--r-card)] p-6 lg:col-span-2"
+        className="surface-2 rounded-[var(--r-card)] p-6 lg:col-span-2"
         style={{
-          background: "var(--surface-2)",
           border: "1px solid var(--hairline)",
           boxShadow: "var(--elev-raise)",
         }}
@@ -312,8 +311,8 @@ export function TripIntakeForm() {
           <label className="flex flex-col gap-1.5">
             <span className="eyebrow">From</span>
             <span
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-              style={{ background: "var(--surface-1)", border: "1px solid var(--hairline-strong)" }}
+              className="surface-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+              style={{ border: "1px solid var(--hairline-strong)" }}
             >
               <span style={{ color: "var(--ink-3)" }}>
                 <Glyph d={PIN} />
@@ -331,8 +330,8 @@ export function TripIntakeForm() {
           <label className="flex flex-col gap-1.5">
             <span className="eyebrow">To</span>
             <span
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-              style={{ background: "var(--surface-1)", border: "1px solid var(--hairline-strong)" }}
+              className="surface-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+              style={{ border: "1px solid var(--hairline-strong)" }}
             >
               <span style={{ color: "var(--ink-3)" }}>
                 <Glyph d={PLANE} />
@@ -352,8 +351,8 @@ export function TripIntakeForm() {
 
         {originGeo && destGeo && (
           <div
-            className="mt-4 flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: "var(--surface-1)", border: "1px solid var(--hairline)" }}
+            className="surface-1 mt-4 flex items-center gap-3 rounded-xl px-4 py-3"
+            style={{ border: "1px solid var(--hairline)" }}
           >
             <span className="min-w-0">
               <span className="num block text-sm" style={{ color: "var(--ink-0)" }}>
@@ -459,9 +458,8 @@ export function TripIntakeForm() {
                 aria-label="Number of travellers"
                 value={travellersMany}
                 onChange={(e) => setTravellersMany(e.target.value.replace(/[^0-9]/g, ""))}
-                className="num w-16 rounded-xl px-3 py-2 text-sm outline-none"
+                className="surface-1 num w-16 rounded-xl px-3 py-2 text-sm outline-none"
                 style={{
-                  background: "var(--surface-1)",
                   border: "1px solid var(--hairline-strong)",
                   color: "var(--ink-0)",
                 }}
@@ -513,9 +511,8 @@ export function TripIntakeForm() {
             value={budgetCeiling}
             onChange={(e) => setBudgetCeiling(e.target.value.replace(/[^0-9.]/g, ""))}
             placeholder="none"
-            className="num rounded-xl px-3 py-2.5 text-sm outline-none"
+            className="surface-1 num rounded-xl px-3 py-2.5 text-sm outline-none"
             style={{
-              background: "var(--surface-1)",
               border: "1px solid var(--hairline-strong)",
               color: "var(--ink-0)",
             }}
@@ -530,9 +527,8 @@ export function TripIntakeForm() {
       </div>
 
       <aside
-        className="flex h-fit flex-col overflow-hidden rounded-[var(--r-card)]"
+        className="surface-2 flex h-fit flex-col overflow-hidden rounded-[var(--r-card)]"
         style={{
-          background: "var(--surface-2)",
           border: "1px solid var(--hairline)",
           boxShadow: "var(--elev-raise)",
         }}

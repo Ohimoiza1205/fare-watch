@@ -145,8 +145,8 @@ export function AlertsBoard({
 
       {groups.length === 0 ? (
         <div
-          className="elev-raise mt-8 flex min-h-40 items-center justify-center rounded-[var(--r-card)] p-8"
-          style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+          className="surface-2 elev-raise mt-8 flex min-h-40 items-center justify-center rounded-[var(--r-card)] p-8"
+          style={{ border: "1px solid var(--hairline)" }}
         >
           <p className="text-sm" style={{ color: "var(--ink-2)" }}>
             No alerts yet. They will land here when a watched fare crosses a
@@ -177,9 +177,8 @@ export function AlertsBoard({
                   return (
                     <div
                       key={r.id}
-                      className="flex items-center gap-4 rounded-xl p-3.5"
+                      className="surface-2 flex items-center gap-4 rounded-xl p-3.5"
                       style={{
-                        background: "var(--surface-2)",
                         border: "1px solid var(--hairline)",
                         opacity: revealed ? 1 : 0,
                         transform: revealed ? "none" : "translateY(6px)",

@@ -98,8 +98,8 @@ function Card({
 }) {
   return (
     <section
-      className="elev-raise rounded-[var(--r-card)] p-5"
-      style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+      className="surface-2 elev-raise rounded-[var(--r-card)] p-5"
+      style={{ border: "1px solid var(--hairline)" }}
     >
       <div className="flex items-baseline justify-between">
         <span className="eyebrow">{title}</span>
@@ -235,8 +235,8 @@ export default async function Settings() {
             {channels.map((c) => (
               <div
                 key={c.name}
-                className="rounded-xl p-3.5"
-                style={{ background: "var(--surface-1)", border: "1px solid var(--hairline)" }}
+                className="surface-1 rounded-xl p-3.5"
+                style={{ border: "1px solid var(--hairline)" }}
               >
                 <div className="flex items-center justify-between">
                   <IconTile tone={c.configured ? "cool" : "neutral"} size={32}>
@@ -372,8 +372,7 @@ export default async function Settings() {
 
           {cadence != null && (
             <div
-              className="mt-4 h-1 overflow-hidden rounded-full"
-              style={{ background: "var(--surface-3)" }}
+              className="surface-3 mt-4 h-1 overflow-hidden rounded-full"
             >
               <div
                 className="h-full rounded-full"

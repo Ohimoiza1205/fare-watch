@@ -46,8 +46,8 @@ export function HomeHeader({
       </div>
 
       <span
-        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
-        style={{ background: "var(--surface-2)", border: "1px solid var(--hairline)" }}
+        className="surface-2 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
+        style={{ border: "1px solid var(--hairline)" }}
       >
         <span
           className="dot-breathe"
