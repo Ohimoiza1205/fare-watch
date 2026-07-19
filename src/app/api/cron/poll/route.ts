@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
           stops: cheapest.stops,
           carriers: cheapest.carriers,
           deep_link: cheapest.deepLink,
-          is_virtual_interline: false,
+          is_virtual_interline: cheapest.virtualInterline ?? false,
         })
         .select()
         .single();

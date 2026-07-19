@@ -19,6 +19,11 @@ export type FareQuote = {
   carriers: string[];
   deepLink: string;       // built from the returningToken, or a search URL
   token?: string;         // returningToken, needed to fetch the return leg + booking
+  // True when the itinerary is separately ticketed (self transfer, virtual
+  // interline). The current flights-sky endpoint does not state this, so it
+  // stays unset there; a provider that knows must say so, because a cheap
+  // fare hiding this caveat is invented savings.
+  virtualInterline?: boolean;
 };
 
 // The API hands back a short price history per route. Surface it so the app

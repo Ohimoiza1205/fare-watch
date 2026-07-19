@@ -75,6 +75,11 @@ export function WatchCard({
             <span className="num text-xl" style={{ color: "var(--ink-0)" }}>
               {watch.origin} <span style={{ color: "var(--ink-4)" }}>to</span>{" "}
               {watch.destination}
+              {summary.latest?.is_virtual_interline && (
+                <span className="ml-2 align-middle text-xs normal-case" style={{ color: "var(--ink-3)" }}>
+                  self transfer
+                </span>
+              )}
             </span>
             <StatusPill status={extras.status} />
           </div>

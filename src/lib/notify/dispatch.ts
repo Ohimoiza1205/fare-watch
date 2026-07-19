@@ -33,6 +33,7 @@ export async function dispatch(
     `${signal.reason.toUpperCase()}  ${quote.carriers.join(" ")}  ` +
     `${quote.stops} stop(s)  ${quote.departDate}` +
     (quote.returnDate ? ` to ${quote.returnDate}` : "") +
+    (quote.virtualInterline ? `\nself transfer, separately ticketed` : "") +
     `\n${quote.deepLink}`;
 
   // Record only the channels that actually sent. A channel with missing config
