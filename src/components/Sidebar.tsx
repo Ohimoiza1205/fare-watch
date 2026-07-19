@@ -183,7 +183,7 @@ export function Sidebar({
             className="heading block text-sm tracking-wide"
             style={{ color: "var(--ink-0)", letterSpacing: "0.06em" }}
           >
-            FAREWATCH
+            FAREPOINT
           </span>
           <span
             className="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase"
