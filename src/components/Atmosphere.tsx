@@ -7,10 +7,11 @@ import { useEffect, useRef } from "react";
 // roughly 90 seconds per loop, barely perceptible, one colour at a time.
 // No particles, no grain. Absent under reduced motion (the .atmosphere CSS
 // rule removes it), paused while the tab is hidden, never mounted on the
-// planner canvas. The warm prop keeps the evening hue shift.
+// planner canvas. TONE-SPEC Part 1 retints the base toward the warm accent;
+// the warm prop keeps the evening hue shift, a softer coral.
 
-const COOL = "rgba(109, 123, 216, 0.5)";
-const WARM = "rgba(255, 122, 69, 0.45)";
+const BASE = "rgba(255, 87, 34, 0.4)";
+const EVENING = "rgba(255, 122, 69, 0.5)";
 
 export function Atmosphere({ warm = false }: { warm?: boolean }) {
   const washRef = useRef<HTMLDivElement>(null);
@@ -33,7 +34,7 @@ export function Atmosphere({ warm = false }: { warm?: boolean }) {
         ref={washRef}
         className="atmo-wash absolute"
         style={{
-          background: `radial-gradient(circle, ${warm ? WARM : COOL} 0%, transparent 65%)`,
+          background: `radial-gradient(circle, ${warm ? EVENING : BASE} 0%, transparent 65%)`,
         }}
       />
     </div>

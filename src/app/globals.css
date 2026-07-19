@@ -8,8 +8,10 @@
   then activity, then price. The brightest ink is reserved for numbers.
 */
 :root {
-  --bg: #0d1424;
-  --bg-lift: #15203a;
+  /* near black base per TONE-SPEC Part 1, with the radial lift keeping the
+     centre of the canvas from reading flat */
+  --bg: #0b1120;
+  --bg-lift: #121a2c;
 
   /* raised surfaces, translucent steps of light over the canvas; pair with
      the .surface-N classes so the fill carries backdrop blur */
@@ -19,7 +21,7 @@
 
   /* the one opaque surface, for fills that must not let a lower layer bleed
      through (the chameleon border's padding box) */
-  --surface-solid: #16203a;
+  --surface-solid: #131b2e;
 
   /* hairlines and edge light, for elevation without heavy borders */
   --hairline: rgba(164, 190, 240, 0.12);
@@ -38,8 +40,9 @@
      destructive only. Status colours stay reserved and meaningful. */
   --cool: #3dd6c4;
   --cool-soft: rgba(61, 214, 196, 0.1);
-  --warm: #ff7a45;
-  --warm-soft: rgba(255, 122, 69, 0.12);
+  /* bold orange per TONE-SPEC Part 1: one warm accent, used with confidence */
+  --warm: #ff5722;
+  --warm-soft: rgba(255, 87, 34, 0.12);
   --indigo: #6d7bd8;
   --amber: #d9a441;
   --amber-soft: rgba(217, 164, 65, 0.12);
