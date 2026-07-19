@@ -136,5 +136,19 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Dead man's switch (P8): ping Healthchecks only when this run actually
+  // proved the pipeline works, meaning there was nothing to poll or at least
+  // one provider call succeeded. A run where every request failed does not
+  // ping, so the check fires on total API failure as well as on the cron
+  // never running. Absent env, silently skipped.
+  const healthUrl = process.env.HEALTHCHECK_URL;
+  if (healthUrl && (targets.length === 0 || polled > 0)) {
+    try {
+      await fetch(healthUrl, { method: "GET" });
+    } catch (e) {
+      console.warn("healthcheck ping failed", e);
+    }
+  }
+
   return NextResponse.json({ polled });
 }
