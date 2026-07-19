@@ -31,13 +31,13 @@ export function BudgetBreakdown({
   const { rows } = useMemo(() => categoryBreakdown(source), [source]);
 
   return (
-    <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
+    <div>
       <h3 className="eyebrow">{full ? "Trip breakdown" : "Day breakdown"}</h3>
 
       {rows.length === 0 ? (
         <p className="mt-3 text-xs ink-3">No priced items yet.</p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {rows.map((row) => (
             <li
               key={row.category}

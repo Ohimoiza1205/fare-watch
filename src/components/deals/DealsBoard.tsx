@@ -93,12 +93,8 @@ function DealCard({ deal, index, revealed }: { deal: DealCardData; index: number
     >
       <SpotlightCard glow={big} className="elev-raise h-full rounded-[var(--r-card)]">
         <div
-          className="flex h-full flex-col rounded-[var(--r-card)] p-5"
-          style={
-            big
-              ? undefined
-              : { background: "var(--surface-2)", border: "1px solid var(--hairline)" }
-          }
+          className={`flex h-full flex-col rounded-[var(--r-card)] p-5 ${big ? "" : "surface-2"}`}
+          style={big ? undefined : { border: "1px solid var(--hairline)" }}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">

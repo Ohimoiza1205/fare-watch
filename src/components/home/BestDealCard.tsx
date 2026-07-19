@@ -120,12 +120,8 @@ export function BestDealCard({
       className="elev-raise rounded-[var(--r-card)]"
     >
       <div
-        className="rounded-[var(--r-card)] p-6"
-        style={
-          big
-            ? undefined
-            : { background: "var(--surface-2)", border: "1px solid var(--hairline)" }
-        }
+        className={`rounded-[var(--r-card)] p-6 ${big ? "" : "surface-2"}`}
+        style={big ? undefined : { border: "1px solid var(--hairline)" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">

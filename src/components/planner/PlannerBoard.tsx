@@ -393,64 +393,69 @@ export function PlannerBoard({
           )}
         </div>
 
-        <aside className="space-y-4">
-          <BudgetDonut
-            items={tripBreakdown}
-            currency={currency}
-            planned={budget.average}
-            ceiling={budget.limit}
-            overLimit={budget.overLimit}
-            hasEstimate={budget.hasEstimate}
-            emphasis={hoverCategory}
-          />
-
-          <BudgetBreakdown
-            dayItems={dayBreakdown}
-            tripItems={tripBreakdown}
-            currency={currency}
-            onHoverCategory={setHoverCategory}
-          />
-
-          <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
-            <h3 className="eyebrow">Street map, day {day.dayIndex + 1}</h3>
-            <div className="mt-3">
-              <DayMap
-                key={mapKey}
-                stops={stops}
-                selectedId={selectedStopId}
-                onSelect={setSelectedStopId}
-                onShowInPlan={showInPlan}
-                animate={disclosureReady}
-              />
-            </div>
-          </div>
-
-          <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
-            <h3 className="eyebrow">Spend by day</h3>
-            <HeatCalendar
-              days={days.map((d, i) => ({
-                date: d.date,
-                total: dayTotals[i],
-                estimated: d.items.some((it) => it.isEstimated),
-              }))}
-              formatTotal={(v) => formatMoney(v, currency)}
-              className="mt-3"
+        <aside className="space-y-6">
+          {/* The rail reads top to bottom as anchor, instrument, footnote: the
+              budget ring with its legend in one card, the map and the spend
+              calendar as one shared card, and the summary as a bare strip. */}
+          <div className="surface-2 rounded-xl p-5 shadow-[var(--elev-raise)]">
+            <BudgetDonut
+              items={tripBreakdown}
+              currency={currency}
+              planned={budget.average}
+              ceiling={budget.limit}
+              overLimit={budget.overLimit}
+              hasEstimate={budget.hasEstimate}
+              emphasis={hoverCategory}
             />
-          </div>
-
-          <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
-            <h3 className="eyebrow">Trip summary</h3>
-            <div className="mt-3">
-              <TripSummaryStrip
-                durationDays={days.length}
-                activityCount={activityCount}
-                estimatedTotal={budget.average}
-                dailyAverage={dailyAverage}
+            <div className="mt-6">
+              <BudgetBreakdown
+                dayItems={dayBreakdown}
+                tripItems={tripBreakdown}
                 currency={currency}
-                hasEstimate={budget.hasEstimate}
+                onHoverCategory={setHoverCategory}
               />
             </div>
           </div>
+
+          <div className="surface-2 rounded-xl shadow-[var(--elev-raise)]">
+            <div className="p-4">
+              <h3 className="eyebrow">Street map, day {day.dayIndex + 1}</h3>
+              <div className="mt-3">
+                <DayMap
+                  key={mapKey}
+                  stops={stops}
+                  selectedId={selectedStopId}
+                  onSelect={setSelectedStopId}
+                  onShowInPlan={showInPlan}
+                  animate={disclosureReady}
+                />
+              </div>
+            </div>
+            <div
+              className="border-t p-4"
+              style={{ borderColor: "var(--hairline)" }}
+            >
+              <h3 className="eyebrow">Spend by day</h3>
+              <HeatCalendar
+                days={days.map((d, i) => ({
+                  date: d.date,
+                  total: dayTotals[i],
+                  estimated: d.items.some((it) => it.isEstimated),
+                }))}
+                formatTotal={(v) => formatMoney(v, currency)}
+                className="mt-3"
+              />
+            </div>
+          </div>
+
+          <TripSummaryStrip
+            durationDays={days.length}
+            activityCount={activityCount}
+            estimatedTotal={budget.average}
+            dailyAverage={dailyAverage}
+            currency={currency}
+            hasEstimate={budget.hasEstimate}
+          />
         </aside>
       </div>
 

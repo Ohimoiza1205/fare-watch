@@ -17,8 +17,8 @@ function Fact({
 }) {
   return (
     <div>
-      <div className="text-xs ink-3">{label}</div>
-      <div className="mt-1 num text-lg leading-none ink-0">{children}</div>
+      <div className="text-[0.6875rem] ink-3">{label}</div>
+      <div className="mt-1 num text-sm leading-none ink-0">{children}</div>
     </div>
   );
 }
@@ -39,7 +39,7 @@ export function TripSummaryStrip({
   hasEstimate: boolean;
 }) {
   return (
-    <div className="flex flex-wrap gap-x-12 gap-y-4">
+    <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 px-1">
       <Fact label="Duration">
         {durationDays} {durationDays === 1 ? "day" : "days"}
       </Fact>
@@ -51,12 +51,12 @@ export function TripSummaryStrip({
               ~
             </span>
           )}
-          <span className="mr-1 text-sm ink-3">{currency}</span>
+          <span className="mr-1 text-xs ink-3">{currency}</span>
           <PriceRoll value={estimatedTotal} />
         </span>
       </Fact>
       <Fact label="Daily average">
-        <span className="mr-1 text-sm ink-3">{currency}</span>
+        <span className="mr-1 text-xs ink-3">{currency}</span>
         <PriceRoll value={dailyAverage} />
       </Fact>
     </div>

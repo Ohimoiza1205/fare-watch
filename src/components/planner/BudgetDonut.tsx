@@ -11,7 +11,8 @@ import { categoryBreakdown, type BreakdownItem } from "@/lib/planner/breakdown";
 // ceiling is used, or the planned total when no ceiling is set. The breakdown
 // rows below are the legend, and hovering one dims the other arcs. A long tail
 // of categories folds into a neutral Other so the ring never turns into
-// confetti.
+// confetti. The card surface lives in PlannerBoard so the ring and its legend
+// share one card and the ring can anchor the rail.
 
 type Slice = {
   category: string;
@@ -67,8 +68,8 @@ export function BudgetDonut({
     return out;
   }, [rows]);
 
-  const r = 56;
-  const stroke = 8;
+  const r = 72;
+  const stroke = 10;
   const c = 2 * Math.PI * r;
   const gap = slices.length > 1 ? 2 : 0;
 
@@ -87,23 +88,23 @@ export function BudgetDonut({
           : null;
 
   return (
-    <div className="surface-2 rounded-xl p-4 shadow-[var(--elev-raise)]">
+    <div>
       <h3 className="eyebrow">Budget overview</h3>
 
       {total <= 0 ? (
         <p className="mt-3 text-xs ink-3">No priced items yet.</p>
       ) : (
-        <div className="mt-3 flex items-center justify-center">
+        <div className="mt-5 flex items-center justify-center">
           <div className="relative">
-            <svg width="132" height="132" viewBox="0 0 132 132">
-              <g transform="rotate(-90 66 66)">
+            <svg width="168" height="168" viewBox="0 0 168 168">
+              <g transform="rotate(-90 84 84)">
                 {slices.map((s) => {
                   const dash = Math.max(s.fraction * c - gap, 0.5);
                   return (
                     <circle
                       key={s.category}
-                      cx="66"
-                      cy="66"
+                      cx="84"
+                      cy="84"
                       r={r}
                       fill="none"
                       stroke={s.color}
@@ -125,7 +126,7 @@ export function BudgetDonut({
                   other money figure; percent of ceiling lives in the stat
                   card's gauge */}
               <span
-                className={`num text-xl leading-none ${hasEstimate ? "ink-2" : "ink-0"}`}
+                className={`num text-3xl leading-none ${hasEstimate ? "ink-2" : "ink-0"}`}
                 style={overLimit ? { color: "var(--warn)" } : undefined}
               >
                 {hasEstimate && (
@@ -133,10 +134,10 @@ export function BudgetDonut({
                     ~
                   </span>
                 )}
-                <span className="mr-1 text-sm ink-3">{currency}</span>
+                <span className="mr-1 text-base ink-3">{currency}</span>
                 <PriceRoll value={planned} />
               </span>
-              <span className="mt-1 num text-[0.625rem] ink-3">
+              <span className="mt-1.5 num text-xs ink-3">
                 {hasCeiling
                   ? `of ${formatMoney(ceiling as number, currency)} (${Math.round(pct)}%)`
                   : "planned"}
