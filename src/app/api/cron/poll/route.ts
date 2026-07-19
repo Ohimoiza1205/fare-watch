@@ -117,12 +117,18 @@ export async function GET(req: NextRequest) {
         `poll watch=${w.id} price=${cheapest.price} historyPoints=${points.length}`
       );
 
-      const { data: hist } = await db
+      // History must exclude the observation just written, or the current
+      // price competes against itself: the floor could never sit above it,
+      // so the mistake rule could never fire, the drop rule would compare
+      // the price to itself, and the alert's "prior floor" would be a lie.
+      let histQuery = db
         .from("observation")
         .select("price, observed_at")
         .eq("watch_id", w.id)
         .order("observed_at", { ascending: false })
         .limit(500);
+      if (obs) histQuery = histQuery.neq("id", obs.id);
+      const { data: hist } = await histQuery;
 
       const signal = evaluate(
         cheapest.price,

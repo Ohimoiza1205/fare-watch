@@ -8,15 +8,28 @@ import { sendWhatsApp } from "./whatsapp";
 // is not recorded, so the first poll after the window re-detects it and
 // delivers only if the fare still qualifies; alerting in the morning on a
 // price that died overnight would be announcing a deal that does not exist.
-export function inQuietHours(now: Date, raw = process.env.QUIET_HOURS): boolean {
-  if (!raw) return false;
+// One parser for the window, shared with the Settings display so what is
+// shown and what is enforced can never disagree. Null means no active
+// window: unset, malformed, or degenerate (start equals end after % 24).
+export function parseQuietHours(
+  raw = process.env.QUIET_HOURS
+): { start: number; end: number } | null {
+  if (!raw) return null;
   const m = /^(\d{1,2})-(\d{1,2})$/.exec(raw.trim());
-  if (!m) return false;
+  if (!m) return null;
   const start = Number(m[1]) % 24;
   const end = Number(m[2]) % 24;
-  if (start === end) return false;
+  if (start === end) return null;
+  return { start, end };
+}
+
+export function inQuietHours(now: Date, raw = process.env.QUIET_HOURS): boolean {
+  const win = parseQuietHours(raw);
+  if (!win) return false;
   const h = now.getHours();
-  return start < end ? h >= start && h < end : h >= start || h < end;
+  return win.start < win.end
+    ? h >= win.start && h < win.end
+    : h >= win.start || h < win.end;
 }
 import type { FareQuote } from "@/lib/providers/types";
 import type { FiredSignal } from "@/lib/detect/signals";

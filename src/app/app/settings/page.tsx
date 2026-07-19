@@ -2,6 +2,7 @@ import { latestObservationAt, requestsThisMonth } from "@/lib/db/queries";
 import { createServiceClient } from "@/lib/db/client";
 import { pollCadenceMs } from "@/lib/cron";
 import { MONTHLY_REQUEST_CAP } from "@/lib/limits";
+import { parseQuietHours } from "@/lib/notify/dispatch";
 import { KineticHeading } from "@/components/KineticHeading";
 import { IconTile } from "@/components/IconTile";
 
@@ -208,10 +209,9 @@ export default async function Settings() {
   ];
   const configuredCount = channels.filter((c) => c.configured).length;
 
-  const rawQuiet = process.env.QUIET_HOURS?.trim();
-  const quietMatch = rawQuiet ? /^(\d{1,2})-(\d{1,2})$/.exec(rawQuiet) : null;
-  const quietHours = quietMatch
-    ? `${quietMatch[1].padStart(2, "0")}:00 to ${quietMatch[2].padStart(2, "0")}:00`
+  const quietWindow = parseQuietHours();
+  const quietHours = quietWindow
+    ? `${String(quietWindow.start).padStart(2, "0")}:00 to ${String(quietWindow.end).padStart(2, "0")}:00`
     : null;
 
   const cadence = pollCadenceMs();
