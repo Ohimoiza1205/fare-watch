@@ -44,6 +44,10 @@ export async function GET(req: NextRequest) {
 
   const providers = enabledProviders();
   let polled = 0;
+  // For the dead man's ping: a successful provider call that returns zero
+  // quotes is still a healthy pipeline, so it must count toward pinging even
+  // though polled only counts fully processed results.
+  let anyRequestOk = false;
 
   for (const w of targets) {
     for (const p of providers) {
@@ -61,6 +65,7 @@ export async function GET(req: NextRequest) {
           currency: w.currency,
         });
         requestOk = true;
+        anyRequestOk = true;
       } catch (e) {
         console.error(`poll failed watch=${w.id} provider=${p.name}`, e);
       }
@@ -138,11 +143,12 @@ export async function GET(req: NextRequest) {
 
   // Dead man's switch (P8): ping Healthchecks only when this run actually
   // proved the pipeline works, meaning there was nothing to poll or at least
-  // one provider call succeeded. A run where every request failed does not
-  // ping, so the check fires on total API failure as well as on the cron
-  // never running. Absent env, silently skipped.
+  // one provider call succeeded, even one that returned no quotes. A run
+  // where every request failed does not ping, so the check fires on total
+  // API failure as well as on the cron never running. Absent env, silently
+  // skipped.
   const healthUrl = process.env.HEALTHCHECK_URL;
-  if (healthUrl && (targets.length === 0 || polled > 0)) {
+  if (healthUrl && (targets.length === 0 || anyRequestOk)) {
     try {
       await fetch(healthUrl, { method: "GET" });
     } catch (e) {

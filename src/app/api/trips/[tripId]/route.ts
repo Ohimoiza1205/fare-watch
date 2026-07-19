@@ -72,11 +72,6 @@ export async function PATCH(
     );
   }
 
-  const shiftMs = newStart - oldStart;
-  if (shiftMs === 0) {
-    return NextResponse.json({ ok: true, startDate: toIso(newStart), endDate: toIso(newEnd) });
-  }
-
   const { data: dayData } = await db
     .from("day")
     .select("id, day_index, day_date, weather")
@@ -84,45 +79,57 @@ export async function PATCH(
     .order("day_index", { ascending: true });
   const days = (dayData ?? []) as Pick<DayRow, "id" | "day_index" | "day_date" | "weather">[];
 
-  // Real forecasts for the new dates in one call; a date the forecast cannot
-  // cover comes back absent and the day stores null rather than a stale
-  // snapshot for a date it no longer sits on.
-  const shifted = days.map((d) => {
-    const t = parseDay(d.day_date);
-    return { ...d, newDate: t != null ? toIso(t + shiftMs) : d.day_date };
-  });
-  let weatherByDate = new Map<string, WeatherSnapshot>();
-  if (trip.dest_lat != null && trip.dest_lon != null) {
-    try {
-      weatherByDate = await fetchWeatherRange({
-        lat: trip.dest_lat,
-        lon: trip.dest_lon,
-        dates: shifted.map((d) => d.newDate),
-      });
-    } catch {
-      // weather refresh is best effort; the dates still shift
-    }
-  }
-
-  for (const d of shifted) {
-    const { error } = await db
-      .from("day")
-      .update({ day_date: d.newDate, weather: weatherByDate.get(d.newDate) ?? null })
-      .eq("id", d.id);
-    if (error) {
-      return NextResponse.json(
-        { error: `Day update failed: ${error.message}` },
-        { status: 500 }
-      );
-    }
-  }
+  // Each day's target date is derived from its index anchored at the new
+  // start, never from a relative offset, so the write is idempotent: if a
+  // failure leaves the plan partially shifted, applying the same range again
+  // converges every remaining day. The trip row is written first for the
+  // same reason; a re-apply then recomputes identical targets.
+  const minIdx = days.length ? Math.min(...days.map((d) => d.day_index)) : 0;
+  const targeted = days.map((d) => ({
+    ...d,
+    newDate: toIso(newStart + (d.day_index - minIdx) * DAY_MS),
+  }));
 
   const { error: tripErr } = await db
     .from("trip")
     .update({ start_date: toIso(newStart), end_date: toIso(newEnd) })
     .eq("id", tripId);
   if (tripErr) {
-    return NextResponse.json({ error: `Trip update failed: ${tripErr.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `The trip did not update: ${tripErr.message}. Nothing was changed.` },
+      { status: 500 }
+    );
+  }
+
+  // Real forecasts for the new dates in one call; a date the forecast cannot
+  // cover comes back absent and the day stores null rather than a stale
+  // snapshot for a date it no longer sits on.
+  let weatherByDate = new Map<string, WeatherSnapshot>();
+  if (trip.dest_lat != null && trip.dest_lon != null) {
+    try {
+      weatherByDate = await fetchWeatherRange({
+        lat: trip.dest_lat,
+        lon: trip.dest_lon,
+        dates: targeted.map((d) => d.newDate),
+      });
+    } catch {
+      // weather refresh is best effort; the dates still shift
+    }
+  }
+
+  for (const d of targeted) {
+    const { error } = await db
+      .from("day")
+      .update({ day_date: d.newDate, weather: weatherByDate.get(d.newDate) ?? null })
+      .eq("id", d.id);
+    if (error) {
+      return NextResponse.json(
+        {
+          error: `Day ${d.day_index} did not update: ${error.message}. The plan may be partially shifted; apply the same dates again to finish.`,
+        },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json({ ok: true, startDate: toIso(newStart), endDate: toIso(newEnd) });
