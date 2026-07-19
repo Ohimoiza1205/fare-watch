@@ -185,7 +185,7 @@ This is how the product keeps getting better without the build ever drifting: id
 ## MORNING CHECKLIST
 (Owner only actions the agent prepared but did not perform.)
 
-- Push the branch: `git push -u origin overnight/jul-17` hangs waiting for GitHub sign-in (HTTPS remote, credential manager has no stored credential). Run it once interactively, or type `! git push -u origin overnight/jul-17` in the Claude Code session; every commit is local until then.
+- Pushed: overnight/jul-17 is on GitHub as of 19 July 2026 (credentials were cached by then). Review and merge to main when satisfied.
 - Add ANTHROPIC_API_KEY to .env.local (and later Vercel) to bring the assistant out of its degraded state. Optionally set ANTHROPIC_MODEL; the code defaults to claude-haiku-4-5.
 - Rotate the RapidAPI key (CLAUDE.md section 12: the key used during de-risk runs was exposed in chat). Regenerate in RapidAPI, update .env.local and Vercel.
 - Two junk trips sit in the trips table from before the currency and rate limit fixes: the 14 day Lagos trip with USD scale figures labelled NGN, and one empty 5 day Lagos shell (id e8dd5cb6). Delete them from Supabase if unwanted; the agent does not delete user data.
