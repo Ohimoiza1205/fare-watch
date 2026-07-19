@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { WeatherSnapshot } from "@/lib/planner/types";
 import { useNow } from "@/lib/hooks";
+import { MONTHLY_REQUEST_CAP } from "@/lib/limits";
 import { DestinationImage } from "@/components/DestinationImage";
 
 // The left rail. Dark in both themes for continuity, so it reads from the
@@ -128,11 +129,13 @@ export function Sidebar({
   lastPollAt,
   cadenceMs,
   tripLink,
+  requestsUsed,
 }: {
   weather?: SidebarWeather | null;
   lastPollAt: string | null;
   cadenceMs: number | null;
   tripLink: { label: string; href: string; city: string } | null;
+  requestsUsed?: number | null;
 }) {
   const pathname = usePathname();
   const now = useNow(30_000);
@@ -278,6 +281,16 @@ export function Sidebar({
                 transition: "width var(--d3) var(--ease)",
               }}
             />
+          </div>
+        )}
+        {requestsUsed != null && (
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-[10px] uppercase" style={{ letterSpacing: "0.08em", color: "var(--ink-4)" }}>
+              Requests
+            </span>
+            <span className="num text-[11px]" style={{ color: "var(--ink-3)" }}>
+              {requestsUsed} of {MONTHLY_REQUEST_CAP}
+            </span>
           </div>
         )}
       </div>

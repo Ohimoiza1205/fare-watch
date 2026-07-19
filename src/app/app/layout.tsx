@@ -3,7 +3,7 @@ import { Sidebar, type SidebarWeather } from "@/components/Sidebar";
 import { ThemeScope } from "@/components/ThemeScope";
 import { CommandPalette } from "@/components/CommandPalette";
 import { createServiceClient } from "@/lib/db/client";
-import { latestObservationAt } from "@/lib/db/queries";
+import { latestObservationAt, requestsThisMonth } from "@/lib/db/queries";
 import { pollCadenceMs } from "@/lib/cron";
 import { mostRecentTrip, nextUpcomingTrip, type NextTrip } from "@/lib/planner/repo";
 import { fetchWeather } from "@/lib/planner/weather";
@@ -47,6 +47,14 @@ async function lastPoll(): Promise<string | null> {
   }
 }
 
+async function requestsUsed(): Promise<number | null> {
+  try {
+    return await requestsThisMonth();
+  } catch {
+    return null;
+  }
+}
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -56,6 +64,7 @@ export default async function DashboardLayout({
   const weather = await sidebarWeather(trip);
   const lastPollAt = await lastPoll();
   const cadenceMs = pollCadenceMs();
+  const requests = await requestsUsed();
 
   const city = trip ? (trip.destLabel ?? trip.destination).split(",")[0].trim() : null;
   const tripLink =
@@ -70,6 +79,7 @@ export default async function DashboardLayout({
         lastPollAt={lastPollAt}
         cadenceMs={cadenceMs}
         tripLink={tripLink}
+        requestsUsed={requests}
       />
       <ThemeScope>{children}</ThemeScope>
       <CommandPalette tripLink={tripLink} />

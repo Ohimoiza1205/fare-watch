@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
   for (const w of targets) {
     for (const p of providers) {
       let result;
+      let requestOk = false;
       try {
         result = await p.search({
           origin: w.origin,
@@ -59,10 +60,21 @@ export async function GET(req: NextRequest) {
           maxStops: w.max_stops,
           currency: w.currency,
         });
+        requestOk = true;
       } catch (e) {
         console.error(`poll failed watch=${w.id} provider=${p.name}`, e);
-        continue;
       }
+
+      // The monthly cap counts requests, not successes, so every outbound
+      // call is recorded. Fail-quiet: before tracker-additions.sql has been
+      // run this table does not exist, and the poll must not break over its
+      // own bookkeeping.
+      const { error: reqErr } = await db
+        .from("poll_request")
+        .insert({ watch_id: w.id, provider: p.name, ok: requestOk });
+      if (reqErr) console.warn(`poll_request not recorded: ${reqErr.message}`);
+
+      if (!result) continue;
 
       const cheapest = result.quotes[0];
       if (!cheapest) continue;

@@ -202,6 +202,22 @@ export async function listAlerts(limit = 200): Promise<AlertLogRow[]> {
 }
 
 // The newest observation timestamp alone, for the sidebar's poll status line.
+// Real requests made this calendar month, from the poll_request table the
+// poller writes one row into per outbound API call. Null when the table does
+// not exist yet (tracker-additions.sql not run) so callers omit the counter
+// rather than invent one.
+export async function requestsThisMonth(): Promise<number | null> {
+  const db = createServiceClient();
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const { count, error } = await db
+    .from("poll_request")
+    .select("id", { count: "exact", head: true })
+    .gte("requested_at", monthStart);
+  if (error || count == null) return null;
+  return count;
+}
+
 export async function latestObservationAt(): Promise<string | null> {
   const db = createServiceClient();
   const { data } = await db

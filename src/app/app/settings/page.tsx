@@ -1,6 +1,7 @@
-import { latestObservationAt } from "@/lib/db/queries";
+import { latestObservationAt, requestsThisMonth } from "@/lib/db/queries";
 import { createServiceClient } from "@/lib/db/client";
 import { pollCadenceMs } from "@/lib/cron";
+import { MONTHLY_REQUEST_CAP } from "@/lib/limits";
 import { KineticHeading } from "@/components/KineticHeading";
 import { IconTile } from "@/components/IconTile";
 
@@ -210,8 +211,13 @@ export default async function Settings() {
   const cadence = pollCadenceMs();
   let lastPollAt: string | null = null;
   let routes = 0;
+  let requestsUsed: number | null = null;
   try {
-    [lastPollAt, routes] = await Promise.all([latestObservationAt(), activeWatches()]);
+    [lastPollAt, routes, requestsUsed] = await Promise.all([
+      latestObservationAt(),
+      activeWatches(),
+      requestsThisMonth(),
+    ]);
   } catch {
     // the cards still render when the database is unreachable
   }
@@ -365,6 +371,14 @@ export default async function Settings() {
                 <span className="eyebrow">Next run</span>
                 <div className="num mt-1 text-sm" style={{ color: "var(--ink-1)" }}>
                   {nextRunMs > 0 ? `in ${relativeAge(nextRunMs)}` : "overdue"}
+                </div>
+              </div>
+            )}
+            {requestsUsed != null && (
+              <div>
+                <span className="eyebrow">Requests this month</span>
+                <div className="num mt-1 text-sm" style={{ color: "var(--ink-1)" }}>
+                  {requestsUsed} of {MONTHLY_REQUEST_CAP}
                 </div>
               </div>
             )}
