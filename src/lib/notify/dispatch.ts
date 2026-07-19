@@ -28,20 +28,37 @@ export async function dispatch(
     .limit(1);
   if (recent && recent.length) return;
 
+  // Trust on the lock screen comes from visible evidence (P9): the body
+  // states the arithmetic the alert fired on, not just the verdict.
+  const ev = signal.evidence;
+  const evidenceLine =
+    `${signal.context}, from ${ev.readings} stored ${ev.readings === 1 ? "reading" : "readings"}` +
+    (ev.floor != null ? `, prior floor ${quote.currency} ${ev.floor}` : "");
+
   const title = `${watch.origin} to ${watch.destination}  ${quote.currency} ${quote.price}`;
   const body =
     `${signal.reason.toUpperCase()}  ${quote.carriers.join(" ")}  ` +
     `${quote.stops} stop(s)  ${quote.departDate}` +
     (quote.returnDate ? ` to ${quote.returnDate}` : "") +
+    `\n${evidenceLine}` +
+    (signal.reason === "mistake"
+      ? `\nmistake fares may not be honoured; book fast, keep the rest refundable`
+      : "") +
     (quote.virtualInterline ? `\nself transfer, separately ticketed` : "") +
     `\n${quote.deepLink}`;
+
+  // Triage by priority (P9): a mistake fare can vanish in minutes and breaks
+  // through, a threshold hit is personal and loud, the statistical reasons
+  // ride at default.
+  const priority =
+    signal.reason === "mistake" ? "max" : signal.reason === "threshold" ? "high" : "default";
 
   // Record only the channels that actually sent. A channel with missing config
   // returns false and is left out, so the alert log reflects what really fired.
   const channels: string[] = [];
   const results = await Promise.allSettled([
     sendEmail(title, body),
-    sendPush(title, body, quote.deepLink),
+    sendPush(title, body, quote.deepLink, priority),
     sendWhatsApp(`${title}\n${body}`),
   ]);
   const names = ["email", "push", "whatsapp"];

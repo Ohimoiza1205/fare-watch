@@ -1,10 +1,13 @@
 export type PriceRow = { price: number; observed_at: string };
 
-// Discriminated on fire so a checked signal carries a non-null reason.
+// Discriminated on fire so a checked signal carries a non-null reason. The
+// evidence rides along so alert copy can state the arithmetic it fired on
+// (P9): how many stored readings backed the decision and the prior floor.
 export type FiredSignal = {
   fire: true;
   reason: "mistake" | "threshold" | "percentile" | "drop";
   context: string;
+  evidence: { readings: number; floor: number | null };
 };
 
 export type Signal = FiredSignal | { fire: false; reason: null; context: string };
@@ -24,6 +27,10 @@ export function evaluate(
   const prices = history.map((h) => h.price);
   const floor = Math.min(...prices, Infinity);
   const p10 = percentile(prices, 10);
+  const evidence = {
+    readings: prices.length,
+    floor: floor === Infinity ? null : floor,
+  };
 
   // need a minimum history before percentile logic is trustworthy
   const enoughHistory = prices.length >= 20;
@@ -34,6 +41,7 @@ export function evaluate(
       fire: true,
       reason: "mistake",
       context: `current ${current} is below 55% of floor ${floor}`,
+      evidence,
     };
   }
 
@@ -43,6 +51,7 @@ export function evaluate(
       fire: true,
       reason: "threshold",
       context: `current ${current} at or below target ${targetPrice}`,
+      evidence,
     };
   }
 
@@ -52,6 +61,7 @@ export function evaluate(
       fire: true,
       reason: "percentile",
       context: `current ${current} at or below p10 ${p10}`,
+      evidence,
     };
   }
 
@@ -63,6 +73,7 @@ export function evaluate(
         fire: true,
         reason: "drop",
         context: `current ${current} is 20%+ below last ${last}`,
+        evidence,
       };
     }
   }
