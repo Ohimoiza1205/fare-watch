@@ -41,7 +41,7 @@ export function NextTripCard({
           {hasPastTrips ? "No upcoming trips." : "No trips yet."}
         </p>
         <Link
-          href="/plan"
+          href="/app/plan"
           className="pressable rounded-full px-4 py-2 text-xs"
           style={{ border: "1px solid var(--hairline-strong)", color: "var(--cool)" }}
         >
@@ -112,7 +112,7 @@ export function NextTripCard({
             {trip.stops} {trip.stops === 1 ? "stop" : "stops"} planned
           </span>
           <Link
-            href={`/plan/${trip.id}`}
+            href={`/app/plan/${trip.id}`}
             className="pressable text-xs"
             style={{ color: "var(--cool)" }}
           >

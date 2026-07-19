@@ -21,7 +21,7 @@ function TripLine({ trip }: { trip: TripSummary }) {
       : "";
   return (
     <Link
-      href={`/plan/${trip.id}`}
+      href={`/app/plan/${trip.id}`}
       className="group grid grid-cols-[1fr_auto] items-baseline gap-6 border-b py-4 transition-colors duration-[var(--d1)]"
       style={{ borderColor: "var(--hairline)" }}
     >

@@ -188,14 +188,14 @@ export default async function Profile() {
         </div>
         <div className="flex gap-2">
           <Link
-            href="/settings"
+            href="/app/settings"
             className="pressable rounded-full px-4 py-2 text-sm"
             style={{ border: "1px solid var(--hairline-strong)", color: "var(--ink-2)" }}
           >
             Settings
           </Link>
           <Link
-            href="/plan"
+            href="/app/plan"
             className="pressable rounded-full px-4 py-2 text-sm font-medium"
             style={{ background: "var(--cool)", color: "var(--on-accent)" }}
           >
@@ -246,7 +246,7 @@ export default async function Profile() {
           {trips.length === 0 ? (
             <p className="mt-3 text-sm" style={{ color: "var(--ink-3)" }}>
               No trips yet.{" "}
-              <Link href="/plan" className="pressable" style={{ color: "var(--cool)" }}>
+              <Link href="/app/plan" className="pressable" style={{ color: "var(--cool)" }}>
                 Plan a trip
               </Link>
             </p>
@@ -289,7 +289,7 @@ export default async function Profile() {
                       {isUpcoming ? "Upcoming" : "Past"}
                     </span>
                     <Link
-                      href={`/plan/${t.id}`}
+                      href={`/app/plan/${t.id}`}
                       className="pressable shrink-0 text-xs"
                       style={{ color: "var(--cool)" }}
                     >
@@ -308,7 +308,7 @@ export default async function Profile() {
         >
           <div className="flex items-baseline justify-between">
             <span className="eyebrow">Account settings</span>
-            <Link href="/settings" className="pressable text-xs" style={{ color: "var(--cool)" }}>
+            <Link href="/app/settings" className="pressable text-xs" style={{ color: "var(--cool)" }}>
               Manage settings
             </Link>
           </div>

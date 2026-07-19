@@ -284,7 +284,7 @@ export function TripIntakeForm() {
         setBusy(false);
         return;
       }
-      router.push(`/plan/${data.id}`);
+      router.push(`/app/plan/${data.id}`);
     } catch {
       setError("Could not reach the server. Please try again.");
       setBusy(false);

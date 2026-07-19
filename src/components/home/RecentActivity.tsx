@@ -43,7 +43,7 @@ export function RecentActivity({ events }: { events: ActivityEvent[] }) {
     >
       <div className="flex items-baseline justify-between">
         <span className="eyebrow">Recent activity</span>
-        <Link href="/alerts" className="pressable text-xs" style={{ color: "var(--cool)" }}>
+        <Link href="/app/alerts" className="pressable text-xs" style={{ color: "var(--cool)" }}>
           All alerts
         </Link>
       </div>

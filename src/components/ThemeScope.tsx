@@ -12,7 +12,7 @@ import { Atmosphere } from "@/components/Atmosphere";
 // the server cannot know the local hour.
 export function ThemeScope({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const planner = pathname.startsWith("/plan");
+  const planner = pathname.startsWith("/app/plan");
   const [warm, setWarm] = useState(false);
 
   useEffect(() => {

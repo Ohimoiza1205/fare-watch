@@ -10,28 +10,28 @@ const BASE_GROUPS: Group[] = [
   {
     label: "TRACKER",
     items: [
-      { label: "Home", href: "/" },
-      { label: "Deals", href: "/deals" },
-      { label: "Watchlist", href: "/watchlist" },
-      { label: "Alerts", href: "/alerts" },
+      { label: "Home", href: "/app" },
+      { label: "Deals", href: "/app/deals" },
+      { label: "Watchlist", href: "/app/watchlist" },
+      { label: "Alerts", href: "/app/alerts" },
     ],
   },
   {
     label: "PLANNER",
-    items: [{ label: "Plan a trip", href: "/plan" }],
+    items: [{ label: "Plan a trip", href: "/app/plan" }],
   },
   {
     label: "ACCOUNT",
     items: [
-      { label: "Profile", href: "/profile" },
-      { label: "Settings", href: "/settings" },
+      { label: "Profile", href: "/app/profile" },
+      { label: "Settings", href: "/app/settings" },
     ],
   },
   {
     label: "ACTIONS",
     items: [
-      { label: "Add watch", href: "/watchlist#add" },
-      { label: "Plan a trip", href: "/plan" },
+      { label: "Add watch", href: "/app/watchlist#add" },
+      { label: "Plan a trip", href: "/app/plan" },
     ],
   },
 ];

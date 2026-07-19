@@ -60,7 +60,7 @@ export default async function DashboardLayout({
   const city = trip ? (trip.destLabel ?? trip.destination).split(",")[0].trim() : null;
   const tripLink =
     trip && city
-      ? { label: `${city} itinerary`, href: `/plan/${trip.id}`, city }
+      ? { label: `${city} itinerary`, href: `/app/plan/${trip.id}`, city }
       : null;
 
   return (

@@ -56,7 +56,7 @@ type Item = { id: string; label: string; href: string };
 type Group = { label: string; items: Item[] };
 
 function isActive(item: Item, pathname: string): boolean {
-  if (item.href === "/") return pathname === "/";
+  if (item.href === "/app") return pathname === "/app";
   return pathname.startsWith(item.href) || pathname === item.href;
 }
 
@@ -144,24 +144,24 @@ export function Sidebar({
     {
       label: "Tracker",
       items: [
-        { id: "home", label: "Home", href: "/" },
-        { id: "deals", label: "Deals", href: "/deals" },
-        { id: "watchlist", label: "Watchlist", href: "/watchlist" },
-        { id: "alerts", label: "Alerts", href: "/alerts" },
+        { id: "home", label: "Home", href: "/app" },
+        { id: "deals", label: "Deals", href: "/app/deals" },
+        { id: "watchlist", label: "Watchlist", href: "/app/watchlist" },
+        { id: "alerts", label: "Alerts", href: "/app/alerts" },
       ],
     },
     {
       label: "Planner",
       items: [
-        { id: "plan", label: "Plan a trip", href: "/plan" },
+        { id: "plan", label: "Plan a trip", href: "/app/plan" },
         ...(tripLink ? [{ id: "trip", label: tripLink.label, href: tripLink.href }] : []),
       ],
     },
     {
       label: "Account",
       items: [
-        { id: "profile", label: "Profile", href: "/profile" },
-        { id: "settings", label: "Settings", href: "/settings" },
+        { id: "profile", label: "Profile", href: "/app/profile" },
+        { id: "settings", label: "Settings", href: "/app/settings" },
       ],
     },
   ];

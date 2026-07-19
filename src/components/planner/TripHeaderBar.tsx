@@ -147,7 +147,7 @@ export function TripHeaderBar({
   travellers,
   budget,
   brief,
-  backHref = "/plan",
+  backHref = "/app/plan",
 }: {
   defaultTitle: string;
   city: string;
