@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "FareWatch",
+  title: "Farepoint",
   description: "Flight price tracker.",
 };
 

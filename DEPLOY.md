@@ -1,4 +1,4 @@
-# Deploying FareWatch
+# Deploying Farepoint
 
 Owner-only steps, in order. The agent prepares; you deploy.
 

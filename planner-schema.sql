@@ -1,4 +1,4 @@
--- FareWatch Planner schema. Run this in the Supabase SQL editor once, after the
+-- Farepoint Planner schema. Run this in the Supabase SQL editor once, after the
 -- existing tracker tables (watch, observation, alert, price_history) are in place.
 --
 -- Three tables: trip is one planned journey, day is one dated slot in it, item is

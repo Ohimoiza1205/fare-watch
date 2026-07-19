@@ -1,4 +1,4 @@
-# FareWatch: Plan of Work
+# Farepoint: Plan of Work
 
 Two phases in sequence. First finish and stabilise the fare tracker that already exists. Then build a trip planner as a second view inside the same app, reusing the route, dates, and live fare the tracker already holds.
 
@@ -37,7 +37,7 @@ When Phase one is done, the tracker is live, self running, and honest about what
 
 ## Phase two: the trip planner view
 
-A second view inside FareWatch. It reuses the route, the dates, and the live fare the tracker already holds, and around that it builds a full two week plan with a real budget.
+A second view inside Farepoint. It reuses the route, the dates, and the live fare the tracker already holds, and around that it builds a full two week plan with a real budget.
 
 ### What it produces
 

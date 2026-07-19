@@ -1,5 +1,5 @@
 # REDESIGN-SPEC.md
-# FareWatch full visual rebuild to the approved reference target
+# Farepoint full visual rebuild to the approved reference target
 # Read alongside CLAUDE.md, MASTER-PLAN.md, DESIGN-STANDARD.md, PLANNER-SPEC.md.
 # Where this file conflicts with older visual rules, THIS FILE WINS: the owner has
 # approved the amendments in Part 1 explicitly. Data honesty rules are NEVER

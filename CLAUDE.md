@@ -1,4 +1,4 @@
-# FareWatch: Build Guide
+# Farepoint: Build Guide
 
 A personal flight price tracker that monitors fixed routes across flexible date windows, stores price history, detects genuine drops and mistake fares, and pushes you a fast alert with a direct booking link.
 
@@ -609,7 +609,7 @@ export async function sendEmail(subject: string, text: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "FareWatch <alerts@yourdomain.dev>",
+      from: "Farepoint <alerts@yourdomain.dev>",
       to: ["you@example.com"],
       subject,
       text,

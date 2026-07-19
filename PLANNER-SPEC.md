@@ -1,6 +1,6 @@
-# FareWatch Planner: Design Spec (paper stage, no code yet)
+# Farepoint Planner: Design Spec (paper stage, no code yet)
 
-A second view inside FareWatch. You enter any trip. It plans the fare, a day by day itinerary of real activities with real prices, the weather for each day, and a running budget that reports the cost and warns when a ceiling is crossed. Intelligence arranges the trip. Real data prices it. Those two never blur.
+A second view inside Farepoint. You enter any trip. It plans the fare, a day by day itinerary of real activities with real prices, the weather for each day, and a running budget that reports the cost and warns when a ceiling is crossed. Intelligence arranges the trip. Real data prices it. Those two never blur.
 
 This spec holds to the craft standard in DESIGN-STANDARD.md: the interface behaves like an instrument, motion communicates state, numbers roll rather than snap, panels glide, colour carries status, nothing decorative competes with data. No em dashes anywhere, in this doc or in the product.
 
@@ -36,7 +36,7 @@ Three layers that read as one plan.
 
 ### The fare
 
-Pulled from the tracker when the route is one FareWatch already watches, so the flight cost is a real observed number. When the route is new, the fare is fetched the same way the tracker fetches, or shown as an estimate clearly marked until a real fare lands. The planner never guesses a flight price silently.
+Pulled from the tracker when the route is one Farepoint already watches, so the flight cost is a real observed number. When the route is new, the fare is fetched the same way the tracker fetches, or shown as an estimate clearly marked until a real fare lands. The planner never guesses a flight price silently.
 
 ### The itinerary
 
@@ -88,7 +88,7 @@ The recommendation system suggests from real, priced, local options. It never fi
 
 ## The data behind it
 
-Sits alongside the existing FareWatch tables in Supabase.
+Sits alongside the existing Farepoint tables in Supabase.
 
 - trip: origin, destination, dates, travellers, optional budget ceiling, taste signal.
 - day: belongs to a trip, holds its date, its weather snapshot, its rhythm level.
