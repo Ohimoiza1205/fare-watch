@@ -393,7 +393,7 @@ export function PlannerBoard({
           )}
         </div>
 
-        <aside className="space-y-6">
+        <aside className="space-y-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto">
           {/* The rail reads top to bottom as anchor, instrument, footnote: the
               budget ring with its legend in one card, the map and the spend
               calendar as one shared card, and the summary as a bare strip. */}
